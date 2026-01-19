@@ -1,76 +1,41 @@
-# Hybrid Zero Trust Architecture: Engineering & Architecture Portfolio
+# Hybrid Zero Trust Architecture: Engineering Portfolio
 
 ## Overview
-This repository documents the **design, engineering, and governance** of a multi-vendor **Hybrid Zero Trust environment**.
+This repository documents the engineering and governance of a multi-vendor hybrid environment. The project serves as a functional staging area to bridge on-premises virtualization with Microsoft Azure, creating a unified security fabric centered on identity-based policy enforcement and automated trust delivery.
 
-It serves as a production-aligned engineering portfolio demonstrating how on-premises virtualization integrates with Microsoft Azure to form a **unified, identity-centric security fabric**.
+**Project Status:** Active engineering build. Documentation and technical artifacts are updated regularly as new integration modules are validated.
 
-This is **not a proof of concept**.  
-All components have been **designed, implemented, integrated, and validated** to reflect real enterprise constraints, operational realities, and failure scenarios.
-
-**Project Status:** Active engineering build. Documentation evolves as integrations are validated.
+[![Key Integration Framework](https://raw.githubusercontent.com/nicko101/Enterprise-Architecture-Portfolio/main/resources/slides/keyintgration.png)](https://raw.githubusercontent.com/nicko101/Enterprise-Architecture-Portfolio/main/resources/slides/keyintgration.png)
+*Figure 1: Full-stack integration summary across Identity, Trust, Access, Perimeter, and Hybrid Cloud.*
 
 ---
 
-## System Capabilities (Architecture Overview)
+## Solutions Architecture
+The environment is built on a modular architecture designed to scale and adapt to enterprise-grade security requirements. It spans four primary domains:
 
-[![Architecture Summary & Key Integrations](resources/slides/keyintgration.png)](resources/slides/keyintgration.png)  
-*Figure 1: End-to-end integration across Identity, Trust, Access Enforcement, Security Perimeter, and Hybrid Cloud connectivity.*
-
----
-
-## Engineering Overview
-This portfolio represents **hands-on engineering with architectural accountability**, not theoretical design.
-
-I acted as both **solution architect and implementing engineer**, defining the target-state architecture while also building and integrating the underlying identity, networking, security, and trust components across on-premises and Azure environments.
-
-The engineering lifecycle covered includes:
-
-- **Architecture & Design** — Translating Zero Trust principles into a deployable hybrid architecture
-- **Implementation** — Identity services, PKI, routing, firewalling, and enforcement controls
-- **Integration** — Multi-vendor alignment (Microsoft, Palo Alto, Aruba)
-- **Validation** — Routing tests, authentication flows, policy enforcement, telemetry
-- **Iteration** — Refinement based on operational behavior and failure scenarios
+* **Identity and Trust Plane**: Managed via a two-tier PKI (Root and Intermediate CA) and Microsoft Entra ID synchronization.
+* **Access and Enforcement Plane**: Context-aware admission utilizing Aruba ClearPass policy orchestration and Microsoft Intune device compliance.
+* **Connectivity and Routing Plane**: Hybrid transit utilizing secure IPsec tunneling and predictable path selection between local Edge and Azure Virtual Network Gateways.
+* **Infrastructure and Hosting Plane**: High-availability compute via a Proxmox virtualization cluster and GNS3-simulated network fabrics.
 
 ---
 
-## Architecture Model
-The environment is built as a **layered Zero Trust system**, where **identity is the primary control plane** and network location provides no implicit trust.
+## Portfolio Navigation
+These links are verified to match the repository structure. Clicking these will lead reviewers directly to the technical deep-dives.
 
-### Identity Plane
-Hybrid identity using on-premises Active Directory synchronized with Microsoft Entra ID as the authoritative identity source.
-
-### Trust Plane
-Certificate-based trust delivered via a multi-tier PKI  
-(Offline Root CA → Issuing CA → NDES), enabling EAP-TLS, device authentication, and secure service communication.
-
-### Access & Enforcement Plane
-Context-aware access enforcement using Aruba ClearPass and Microsoft Intune, combining identity, device posture, and compliance signals.
-
-### Connectivity Plane
-Hybrid routing fabric connecting on-premises infrastructure to Azure using secure site-to-site IPsec tunnels.
-
-### Security Perimeter Plane
-Centralized traffic inspection, policy enforcement, and threat prevention delivered by a next-generation firewall.
-
-This separation ensures **authentication, authorization, and enforcement are decoupled**, enabling scalable policy control and operational resilience.
+| Category | Deep-Dive Links |
+| :--- | :--- |
+| **Integrated Lab Environment** | [Complete Hybrid Network Lab](./Complete%20Hybrid%20Network%20Lab/) |
+| **Architecture Playbook** | [Solutions Architecture](./Solutions_Architecture/) |
+| **Technical Assets** | [Image Resources](./resources/images/) \| [Architectural Slides](./resources/slides/) |
 
 ---
 
-## Repository Structure (Start Here)
+## Technical Standards and Validation
+Functional success is proven through operational evidence:
+* **Traffic Observability**: Real-time logs from Palo Alto and ClearPass telemetry.
+* **Compliance Reporting**: Live status dashboards from Microsoft Intune and Azure Backup status.
+* **Engineering Documentation**: Repeatable deployment templates for hybrid infrastructure.
 
-This repository is intentionally organised into **two primary engineering domains**, supported by a shared resources library.
-
-### 1) Integrated Engineering Build (As-Built)
-**[Complete Hybrid Network Lab](./Complete%20Hybrid%20Network%20Lab/)**  
-The implementation layer.  
-Contains the full end-to-end hybrid lab build, including infrastructure, networking, security controls, and validation evidence.
-
-### 2) Architecture & Modernisation Playbook
-**[Solutions_Architecture](./Solutions_Architecture/)**  
-The design layer.  
-Contains target-state architecture, solution blueprints, integration patterns, and migration / modernisation modules.
-
-### Shared Assets
-**[resources](./resources/)**  
-Architectural diagrams, slides, screenshots, and supporting technical media used throughout the documentation.
+---
+Engineering Portfolio | Focused on Resilient Security Architectures
