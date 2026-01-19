@@ -1,14 +1,16 @@
 # Azure Deployment: Palo Alto Networks NGFW (VM-Series)
+## Forced-Tunnel Security Architecture with Centralized Traffic Inspection
 
 ## Executive Summary
-This document provides a detailed architectural and engineering analysis of an **Azure Resource Manager (ARM) template** used to deploy a **Palo Alto Networks VM-Series Next-Generation Firewall (NGFW)** in Microsoft Azure.
+This document provides a detailed architectural and engineering analysis of an Azure Resource Manager (ARM) template used to deploy a **Palo Alto Networks VM-Series Next-Generation Firewall (NGFW)** in Microsoft Azure.
 
-The deployment provisions a **single-VNet, forced-tunneling security architecture** in the **West Europe** region. A Palo Alto VM-Series firewall (`vmseries-flex`) acts as the **central security enforcement point**, inspecting both inbound and outbound traffic for protected workloads. All private subnet egress is explicitly routed through the firewall using a custom route table, ensuring no workload can bypass inspection.
+The deployment implements a **forced-tunnel security architecture**, where all outbound traffic originating from protected workloads is explicitly routed through the Palo Alto NGFW for inspection and policy enforcement. The firewall operates as the **centralized security control point**, inspecting both inbound and outbound traffic.
 
-Inbound internet traffic is handled via a **Standard Azure Load Balancer**, which distributes traffic to the firewall’s untrusted interface using inbound NAT rules. Azure Network Security Groups (NSGs) are intentionally permissive, delegating all traffic filtering and security enforcement responsibilities to the Palo Alto NGFW.
+A segmented Virtual Network (VNet) is deployed in the **West Europe** region with dedicated subnets for management, untrusted (public) traffic, and trusted (private) workloads. A custom route table applied to the Private subnet enforces forced tunneling by directing all internet-bound traffic (0.0.0.0/0) to the firewall’s trust interface.
 
-This deployment is documented as an **engineering and architectural evaluation**, highlighting both valid design patterns (forced tunneling, centralized inspection) and **explicit risks** (single-instance deployment, permissive management access).
+Inbound internet traffic is handled via a **Standard Azure Load Balancer**, which forwards traffic to the firewall’s untrusted interface using inbound NAT rules. Azure Network Security Groups (NSGs) are intentionally permissive, delegating all traffic filtering responsibility to the Palo Alto NGFW to avoid policy conflicts and ensure consistent Layer 7 enforcement.
 
+This deployment is documented as an **engineering and architectural evaluation**, highlighting valid enterprise design patterns—such as forced tunneling and centralized inspection—alongside explicit risks, including the lack of high availability and permissive management access.
 ---
 
 ## Quick Navigation
@@ -95,6 +97,8 @@ A single Virtual Network is deployed with an address space of **172.16.0.0/16**,
 ### Forced Tunneling (Private Subnet)
 
 A route table (`nf-rt`) is associated **only** with the Private subnet.
+
+This route table implementation represents a classic Azure forced-tunneling design, ensuring that no workload in the Private subnet can bypass firewall inspection for outbound connectivity.
 
 | Destination | Next Hop Type | Next Hop |
 |------------|--------------|----------|
@@ -220,3 +224,4 @@ This deployment demonstrates:
 [Return to Migration & Cloud Modernisation](../README.md)  
 [Return to Solutions Architecture](../../README.md)  
 [Return to Root README](../../../README.md)
+
