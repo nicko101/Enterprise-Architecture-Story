@@ -1,137 +1,123 @@
-# Endpoint Management: Microsoft Intune Integration
+# Endpoint Management — Microsoft Intune Integration
 
 ## Overview
-This section documents the endpoint management and compliance control plane for the hybrid Zero Trust environment. Microsoft Intune is used as the authoritative service for device configuration, posture assessment, and compliance enforcement across both cloud-native and hybrid-joined endpoints.
+This section documents the endpoint management and compliance control plane for the hybrid Zero Trust lab environment. Microsoft Intune is used as the authoritative cloud-based management platform for both cloud-only and hybrid-joined endpoints.
 
-The design follows a **compliance-first security model**, where endpoint health and identity directly influence access decisions across the network and application layers. Devices that do not meet defined security baselines are automatically restricted through downstream enforcement systems.
+Endpoint management is designed around a **compliance-first access model**, where device health and identity directly influence authentication, authorization, and network access decisions across the environment.
 
-This implementation supports both cloud-only and hybrid identity scenarios and integrates tightly with certificate-based authentication, identity services, and network access control.
+This layer integrates tightly with identity services, certificate infrastructure, and network enforcement components to ensure consistent, policy-driven endpoint governance.
+
+---
+
+## Management Scope
+
+Endpoint Management in this environment covers:
+
+- Cloud-managed Windows endpoints (Microsoft Entra ID joined)
+- Hybrid identity-aware devices (Active Directory + Entra ID)
+- Certificate-based device identity for network access
+- Continuous compliance evaluation and enforcement
+
+All managed endpoints participate in the Zero Trust control flow and are treated as untrusted until validated.
+
+---
+
+## Core Capabilities
+
+### Device Enrollment
+Devices are onboarded using standardized enrollment methods:
+
+- Microsoft Entra ID Join for cloud-native devices
+- Hybrid scenarios supported where required
+- Enrollment establishes device identity and management authority
+
+---
+
+### Certificate-Based Device Identity
+Endpoint identity is established using certificates rather than passwords.
+
+- Certificates are issued via SCEP from the on-premises NDES infrastructure
+- Intune delivers and manages certificate profiles
+- Certificates are used for EAP-TLS authentication and device trust validation
+
+This ensures strong, non-replayable device identity across wired, wireless, and VPN access.
+
+---
+
+### Compliance and Posture Evaluation
+Intune continuously evaluates endpoint health and configuration state.
+
+Typical compliance signals include:
+
+- Disk encryption status (BitLocker)
+- Operating system version and patch level
+- Antivirus and security feature state
+- Device integrity and enrollment status
+
+Compliance state is treated as dynamic and authoritative.
+
+---
+
+### Network Access Enforcement Integration
+Endpoint compliance is integrated with network enforcement platforms.
+
+- Compliance state is consumed by Aruba ClearPass
+- Non-compliant devices are denied or restricted at the network edge
+- Enforcement decisions are made in real time based on device posture
+
+This removes static trust assumptions and enforces continuous verification.
+
+---
+
+### Application Deployment and Configuration
+Endpoints are standardized through centralized policy and application delivery.
+
+- Core applications and security agents are deployed automatically
+- Configuration profiles enforce baseline security settings
+- PowerShell scripts are used for configuration consistency where required
 
 ---
 
 ## Architectural Role
-Microsoft Intune operates as the **endpoint governance layer** within the broader Zero Trust architecture.
 
-Its responsibilities include:
-- Establishing device trust through configuration and certificate delivery
-- Continuously evaluating endpoint security posture
-- Publishing compliance signals to external enforcement points
-- Automating remediation and configuration drift correction
+Endpoint Management acts as the **device trust authority** within the architecture:
 
-Intune does not function in isolation. It acts as a control-plane service that feeds validated device state into identity and network enforcement systems.
+- Identity confirms who the user is
+- Certificates confirm what the device is
+- Compliance confirms whether the device is allowed access
 
----
-
-## Core Management Capabilities
-
-### Device Enrollment and Lifecycle
-Endpoints are enrolled using Azure AD Join or Autopilot-based provisioning workflows. Enrollment establishes a persistent device identity in Microsoft Entra and brings the device under management without requiring domain membership.
-
-Supported enrollment models include:
-- Cloud-only Azure AD Join
-- Hybrid Azure AD Join (where applicable)
-
-Once enrolled, devices remain continuously managed regardless of network location.
-
----
-
-### Certificate-Based Identity Distribution
-All managed endpoints rely on certificate-based identity rather than passwords for network authentication.
-
-Key characteristics:
-- Device certificates are issued via SCEP using an on-premises NDES service
-- Certificate profiles are delivered and renewed automatically through Intune
-- Certificates are used for EAP-TLS and TEAP authentication across wired and wireless networks
-
-This ensures that device identity is cryptographically verifiable and resistant to credential-based attacks.
-
----
-
-### Configuration Profiles
-Intune configuration profiles enforce standardized security and connectivity settings across all endpoints.
-
-Examples include:
-- Wired and wireless 802.1X profiles using certificate-based authentication
-- Platform security baselines for Windows endpoints
-- Network and system hardening policies aligned with enterprise standards
-
-Profiles are scoped dynamically using Entra ID groups, enabling flexible targeting without manual device management.
-
----
-
-### Compliance Policies
-Compliance policies define the minimum security posture required for an endpoint to be considered trusted.
-
-Typical compliance signals include:
-- Disk encryption status (BitLocker)
-- Operating system version and patch level
-- Antivirus and endpoint protection state
-- Device integrity and configuration health
-
-Devices that fall out of compliance are immediately flagged, and their compliance state is updated in real time.
-
----
-
-### Integration with Network Enforcement
-Compliance results generated by Intune are consumed by downstream enforcement systems to make access decisions.
-
-Key integration points:
-- Microsoft Entra ID Conditional Access
-- Aruba ClearPass for wired and wireless network admission
-- Palo Alto Networks NGFW for segmentation and quarantine enforcement
-
-This ensures that access is granted based on **current device health**, not just successful authentication.
-
----
-
-### Application Deployment and Scripting
-Intune is also used to standardize the endpoint software environment.
-
-Capabilities include:
-- Automated deployment of required security agents and utilities
-- PowerShell-based configuration scripts
-- Proactive remediation tasks to correct configuration drift
-
-These mechanisms reduce operational overhead and ensure consistent security posture across the fleet.
-
----
-
-## Security Model Summary
-The endpoint management design enforces the following principles:
-
-- Devices must be known, enrolled, and compliant to access resources
-- Network location does not imply trust
-- Certificates replace passwords for machine authentication
-- Compliance state is continuously evaluated and enforced
-- Access can be revoked automatically without manual intervention
-
-This aligns endpoint governance with Zero Trust principles across identity, network, and security domains.
+This layer ensures that access decisions are not based solely on credentials or network location.
 
 ---
 
 ## Related Architecture Components
-This capability integrates with the following architectural domains:
 
-- Certificate Services (PKI and SCEP)  
-  Provides device identity and certificate lifecycle management.  
-  ../Certificate-Services/README.md
+### Certificate Services
+Provides device identity and certificate lifecycle management.
 
-- Identity Plane (Microsoft Entra)  
-  Provides user and device identity, enrollment authority, and policy scope.  
-  ../Entra/README.md
+- PKI (Root and Intermediate CAs):  
+  ../Certificate-Services/PKI/README.md
 
-- Active Directory (Hybrid Trust Services)  
-  Supports certificate issuance and legacy integration where required.  
-  ../Active-Directory/README.md
+- SCEP / NDES:  
+  ../Certificate-Services/SCEP/README.md
 
 ---
 
-## Scope and Intent
-This documentation represents a production-aligned implementation of endpoint management within a hybrid Zero Trust architecture. All configurations described here are actively deployed, validated, and integrated with identity and network enforcement layers.
+### Identity Plane (Microsoft Entra)
+Provides user and device identity, enrollment authority, and policy scope.
 
-The intent is to demonstrate how endpoint compliance can be elevated from a device-only concern to a first-class security control across the entire environment.
+../Entra/README.md
 
 ---
 
-Return to Infrastructure Overview: ../README.md  
-Return to Root Architecture: ../../README.md
+### Active Directory (Hybrid Trust Services)
+Supports certificate issuance and legacy identity integration where required.
+
+../Active Directory/README.md
+
+---
+
+## Summary
+Microsoft Intune provides the foundation for endpoint trust, compliance enforcement, and configuration governance in this hybrid Zero Trust environment.
+
+By integrating certificate-based identity, continuous compliance evaluation, and real-time network enforcement, this layer ensures that endpoint access is earned, validated, and continuously re-evaluated rather than implicitly trusted.
