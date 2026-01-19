@@ -1,25 +1,33 @@
 # Hybrid Zero Trust Architecture: Engineering & Architecture Portfolio
 
 ## Overview
-This repository documents the **design, engineering, and governance** of a multi-vendor **Hybrid Zero Trust environment**.  
-It serves as a functional, production-aligned portfolio demonstrating how on-premises virtualization is integrated with Microsoft Azure to form a unified, identity-centric security fabric.
+This repository documents the **design, engineering, and governance** of a multi-vendor **Hybrid Zero Trust environment**.
+
+It serves as a functional, production-aligned portfolio demonstrating how on-premises virtualization is integrated with Microsoft Azure to form a **unified, identity-centric security fabric**.
 
 This is **not a proof of concept**.  
 All components have been **designed, implemented, integrated, and validated** to reflect real-world enterprise constraints.
 
-**Project Status:** Active engineering build. Architectural and technical artifacts are updated as integrations are validated.
+**Project Status:** Active engineering build. Documentation and technical artifacts are updated as integrations are validated.
+
+---
+
+## System Capabilities
+
+[![Key Integration Framework](resources/slides/keyintgration.png)](resources/slides/keyintgration.png)  
+*Figure 1: Full-stack integration across Identity, Trust, Access, Perimeter Security, and Hybrid Cloud connectivity.*
 
 ---
 
 ## Engineering Overview
 This portfolio represents **hands-on engineering with architectural ownership**, not theoretical design.
 
-I acted as both **solution architect and implementing engineer**, defining the target-state architecture while building and integrating the underlying identity, networking, security, and trust components across on-premises and Azure environments.
+I acted as both **solution architect and implementing engineer**, defining the target-state architecture while also building and integrating the underlying identity, networking, security, and trust components across on-premises and Azure environments.
 
 The work spans the full lifecycle:
 
 - **Architecture & Design** — Translating Zero Trust principles into a deployable hybrid architecture
-- **Implementation** — Building identity, PKI, networking, and security controls
+- **Implementation** — Building identity services, PKI, networking, and security controls
 - **Integration** — Multi-vendor integration across Microsoft, Palo Alto, and Aruba platforms
 - **Validation** — Functional testing of routing, authentication, access enforcement, and inspection
 - **Iteration** — Refinement based on operational behavior and failure scenarios
@@ -56,7 +64,7 @@ This separation ensures **authentication, authorization, and enforcement are dec
 ### Hybrid Routing & Connectivity
 - Site-to-site IPsec connectivity between on-premises and Azure
 - Deterministic routing for hybrid transit
-- Controlled propagation of routes across peered environments
+- Controlled route propagation across peered environments
 
 ### Unified Identity & Trust
 - Hybrid identity with Entra ID
@@ -96,4 +104,9 @@ This repository exists to:
 
 - Demonstrate **real-world Hybrid Zero Trust architecture**
 - Showcase **hands-on engineering with architectural accountability**
-- Provide traceable evidence of **design deci**
+- Provide traceable evidence of **design decisions and implementation logic**
+- Serve as a **living reference** as integrations evolve
+
+---
+
+**Engineering & Architecture Portfolio — Focused on Identity-Centric, Resilient Security Systems**
