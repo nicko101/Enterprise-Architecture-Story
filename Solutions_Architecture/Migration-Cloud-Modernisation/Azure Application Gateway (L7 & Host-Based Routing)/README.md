@@ -1,13 +1,14 @@
 # Azure Hub-and-Spoke Infrastructure: Application Gateway Integration
 
-## Project Documentation
-Detailed architectural briefings and executive summaries for this project can be found here:
-* **Presentation Deck**: [Azure Hub-Spoke Infrastructure Blueprint (PDF)](../../../resources/slidedecks/Azure_Hub_Spoke_Infrastructure_Blueprint.pdf)
+## Project Artifacts
+The following technical resources document the design and automated deployment of this infrastructure:
+* **Architecture Briefing**: [Azure Hub-Spoke Infrastructure Blueprint (PDF)](../../../resources/slidedecks/Azure_Hub_Spoke_Infrastructure_Blueprint.pdf)
+* **Infrastructure as Code**: [Application Gateway ARM Template (JSON)](../../../resources/templates/app_gw.json)
 
 ---
 
 ## Executive Summary
-This project demonstrates the deployment of a comprehensive hub-and-spoke network topology within Microsoft Azure using Infrastructure as Code. The architecture establishes a central Hub Virtual Network (VNet) for shared connectivity and a peered Spoke VNet for application ingress. This design effectively segregates the application ingress point from core network services and workloads.
+This project demonstrates the deployment of a comprehensive hub-and-spoke network topology within Microsoft Azure. The architecture establishes a central Hub Virtual Network (VNet) for shared connectivity and a peered Spoke VNet for application ingress. This design effectively segregates the application ingress point from core network services and workloads, providing a scalable foundation for modern cloud application delivery.
 
 
 
