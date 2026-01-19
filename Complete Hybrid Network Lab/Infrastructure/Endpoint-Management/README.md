@@ -5,7 +5,7 @@ This section documents the core infrastructure services that underpin the Hybrid
 
 This layer is designed as foundational infrastructure, separating identity, trust, and governance from network transport and enforcement.
 
-[Image of a hybrid identity architecture diagram showing Active Directory, Microsoft Entra ID, and Intune]
+
 
 ---
 
@@ -27,4 +27,12 @@ Microsoft Intune provides the cloud-based endpoint management plane for device e
 Microsoft Entra ID provides cloud identity, device registration, and policy scope for enrollment and access control.
 * **Location**: [Entra](./Entra-ID/)
 
-### Identity Services (RB
+### Identity Services (RBAC and Governance)
+Documents how identity is consumed and enforced across the environment, including delegated administration and governance controls.
+* **Location**: [RBAC and Governance](./Identity-Services/RBAC/)
+
+---
+
+## Navigation
+* **Return to Hybrid Network Lab Root**: [../README.md](../README.md)
+* **Return to Repository Home**: [../../README.md](../../README.md)
