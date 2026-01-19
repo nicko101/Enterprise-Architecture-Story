@@ -74,10 +74,3 @@ Contains target-state architecture, solution blueprints, integration patterns, a
 ### Shared Assets
 **[resources](./resources/)**  
 Architectural diagrams, slides, screenshots, and supporting technical media used throughout the documentation.
-
-```text
-/
-├── Complete Hybrid Network Lab/
-├── Solutions_Architecture/
-├── resources/
-└── README.md
