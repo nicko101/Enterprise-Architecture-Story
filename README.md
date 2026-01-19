@@ -1,45 +1,99 @@
-# Hybrid Zero Trust Architecture: Engineering Portfolio
+# Hybrid Zero Trust Architecture: Engineering & Architecture Portfolio
 
 ## Overview
-This repository documents the engineering and governance of a multi-vendor hybrid environment. The project serves as a functional staging area to bridge on-premises virtualization with Microsoft Azure, creating a unified security fabric centered on identity-based policy enforcement and automated trust delivery.
+This repository documents the **design, engineering, and governance** of a multi-vendor **Hybrid Zero Trust environment**.  
+It serves as a functional, production-aligned portfolio demonstrating how on-premises virtualization is integrated with Microsoft Azure to form a unified, identity-centric security fabric.
 
-![System Capabilities](./resources/slides/capabilities.png)
-*Figure 1: Full-stack integration summary across Identity, Trust, Access, Perimeter, and Hybrid Cloud.*
+This is **not a proof of concept**.  
+All components have been **designed, implemented, integrated, and validated** to reflect real-world enterprise constraints.
+
+**Project Status:** Active engineering build. Architectural and technical artifacts are updated as integrations are validated.
+
+---
+
+## Engineering Overview
+This portfolio represents **hands-on engineering with architectural ownership**, not theoretical design.
+
+I acted as both **solution architect and implementing engineer**, defining the target-state architecture while building and integrating the underlying identity, networking, security, and trust components across on-premises and Azure environments.
+
+The work spans the full lifecycle:
+
+- **Architecture & Design** — Translating Zero Trust principles into a deployable hybrid architecture
+- **Implementation** — Building identity, PKI, networking, and security controls
+- **Integration** — Multi-vendor integration across Microsoft, Palo Alto, and Aruba platforms
+- **Validation** — Functional testing of routing, authentication, access enforcement, and inspection
+- **Iteration** — Refinement based on operational behavior and failure scenarios
+
+---
+
+## Architecture Overview
+The architecture is designed as a **layered Zero Trust system**, where **identity is the primary control plane** and network location provides no implicit trust.
+
+The environment is composed of clearly separated architectural layers:
+
+### Identity Plane
+Hybrid identity using on-premises Active Directory synchronized with Microsoft Entra ID as the authoritative identity source.
+
+### Trust Plane
+Certificate-based trust delivered via a multi-tier PKI  
+(Offline Root CA → Issuing CA → NDES), enabling EAP-TLS, device authentication, and secure service communication.
+
+### Access & Enforcement Plane
+Context-aware access enforcement using Aruba ClearPass and Microsoft Intune, combining identity, device posture, and compliance state.
+
+### Connectivity Plane
+Hybrid routing fabric connecting on-premises infrastructure to Azure using secure site-to-site IPsec tunnels.
+
+### Security Perimeter Plane
+Centralized traffic inspection, policy enforcement, and threat prevention delivered by a next-generation firewall.
+
+This separation ensures **authentication, authorization, and enforcement are decoupled**, enabling scalable policy control and operational resilience.
 
 ---
 
 ## Core Engineering Pillars
 
-### Hybrid Routing and Connectivity
-* [Border Gateway Protocol (BGP)](./Security/edge-security-perimeter/): Dynamic routing implementation between on-premises Edge and Azure Virtual WAN for resilient path selection.
-* [Site-to-Site Fabric](./Security/edge-security-perimeter/): Deployment of redundant IPsec tunnels utilizing IKEv2 and BGP prefix advertisements.
+### Hybrid Routing & Connectivity
+- Site-to-site IPsec connectivity between on-premises and Azure
+- Deterministic routing for hybrid transit
+- Controlled propagation of routes across peered environments
 
-### Unified Identity and Trust
-* [Hybrid Identity](./Security/identity-governance/): Synchronization of on-premises Active Directory with Microsoft Entra ID.
-* [Multi-Tier PKI](./Security/identity-governance/): Implementation of a standalone Root-CA and Intermediate-CA for secure certificate lifecycle management.
+### Unified Identity & Trust
+- Hybrid identity with Entra ID
+- Certificate lifecycle management using internal PKI
+- Certificate-based authentication for devices and services
 
-### Access Control and Security
-* [Zero Trust Access](./Solutions_Architecture/Integration/): Integration of Aruba ClearPass and Microsoft Intune for context-aware network admission.
-* [Edge Governance](./Security/edge-security-perimeter/): Palo Alto NGFW deployment featuring SSL Forward Proxy and App-ID security policies.
+### Access Control & Security
+- Zero Trust network admission using ClearPass and Intune
+- Identity- and application-aware firewall enforcement
+- SSL inspection and threat prevention at the edge
 
 ---
 
 ## Portfolio Navigation
 
-| Category | Deep-Dive Links |
-| :--- | :--- |
-| **Integrated Environment** | [Complete Lab Integration Build](./Solutions_Architecture/Integration/) |
-| **Security Engineering** | [Identity Governance](./Security/identity-governance/) \| [Edge Security](./Security/edge-security-perimeter/) |
-| **Architecture Playbook** | [Solutions Architecture](./Solutions_Architecture/) |
-| **Technical Assets** | [Image Resources](./resources/images/) \| [Architectural Slides](./resources/slides/) |
+| Domain | Description |
+|------|------------|
+| **Complete Hybrid Network Lab** | End-to-end integrated lab environment and validation |
+| **Solutions Architecture** | Target-state architecture, design rationale, and structure |
+| **Migration & Cloud Modernisation** | Controlled transition from legacy on-premises to hybrid cloud |
+| **Security & Identity** | Identity governance, PKI, NAC, and enforcement controls |
+| **Resources** | Diagrams, architectural slides, and supporting artifacts |
 
 ---
 
-## Technical Standards and Validation
-Functional success is proven through operational evidence:
-* Traffic Observability: Real-time logs from Palo Alto and ClearPass telemetry.
-* Compliance Reporting: Live status dashboards from Microsoft Intune and Azure Backup status.
-* Engineering Documentation: Repeatable deployment templates for hybrid infrastructure.
+## Technical Standards & Validation
+Functional success is demonstrated through **operational evidence**, not diagrams alone:
+
+- **Traffic Observability** — Firewall and NAC telemetry
+- **Access Enforcement** — Verified identity- and posture-based decisions
+- **Operational Integrity** — Repeatable configuration patterns and tested failure modes
 
 ---
-Engineering Portfolio | Focused on Resilient Security Architectures
+
+## Scope & Intent
+This repository exists to:
+
+- Demonstrate **real-world Hybrid Zero Trust architecture**
+- Showcase **hands-on engineering with architectural accountability**
+- Provide traceable evidence of **design deci**
