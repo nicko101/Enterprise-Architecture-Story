@@ -1,47 +1,54 @@
-# Solutions Architecture: Hybrid Zero Trust Environment
+# Infrastructure Architecture: Virtualization and Compute Fabric
 
-## Purpose
-This section documents the architectural design and composition of the hybrid Zero Trust environment. It focuses on how identity, trust, networking, and security components are assembled into a coherent system, and the rationale behind specific architectural decisions.
-
-**Project Status:** This is an active engineering build. Architectural diagrams and design specifications are updated as new integration modules are validated and transitioned from staging to the core fabric.
+## Overview
+This section documents the physical and virtualized foundation of the portfolio. The infrastructure utilizes a multi-node Proxmox VE cluster integrated with a GNS3 simulation environment to bridge the gap between physical hardware and software-defined networking (SDN).
 
 ---
 
-## High-Level Architecture Context
+## Technical Infrastructure Map
 
-[![Hybrid Zero Trust Architecture Summary](https://raw.githubusercontent.com/nicko101/Enterprise-Architecture-Portfolio/main/resources/slides/summary.png)](https://raw.githubusercontent.com/nicko101/Enterprise-Architecture-Portfolio/main/resources/slides/summary.png)
-*Figure 1: High-level solution architecture showing the integrated relationship between identity, access enforcement, and hybrid cloud connectivity.*
-
-This view establishes architectural context. Detailed logical, physical, and trust-flow diagrams are provided within the relevant sub-sections documented below.
+[![Infrastructure Layout](https://raw.githubusercontent.com/nicko101/Enterprise-Architecture-Portfolio/main/resources/slides/infranew.png)](https://raw.githubusercontent.com/nicko101/Enterprise-Architecture-Portfolio/main/resources/slides/infranew.png)
+*Figure 1: Comprehensive map detailing the relationship between the physical compute layer, the virtualization hypervisor, and the simulated network fabric.*
 
 ---
 
-## Architectural Scope
-The solution architecture spans four primary domains:
-* **Identity and Trust Plane**: Managed via a two-tier PKI and Microsoft Entra ID synchronization.
-* **Access and Enforcement Plane**: Context-aware admission via Aruba ClearPass and Microsoft Intune.
-* **Connectivity and Routing Plane**: Hybrid transit utilizing BGP and secure IPsec tunneling.
-* **Infrastructure and Hosting Plane**: High-availability compute via a Proxmox cluster.
+## Core Infrastructure Components
+
+### 1. Virtualization Fabric (Proxmox VE)
+The environment is hosted on a Proxmox cluster, providing the high-availability compute required for enterprise services.
+* **Hypervisor Management**: Centralized orchestration of Linux Containers (LXC) and Kernel-based Virtual Machines (KVM).
+* **Software Defined Networking**: Implementation of Linux Bridges and Open vSwitch (OVS) to facilitate traffic flow between virtual and physical interfaces.
+* **Storage Governance**: Utilization of ZFS for data integrity and high-performance I/O for virtual disk images.
+
+### 2. Network Simulation (GNS3)
+A GNS3 server is integrated directly into the virtualization layer to simulate complex multi-vendor topologies.
+* **Multi-Vendor Integration**: Hosting of Cisco IOSv, ArubaOS-CX, and Palo Alto PAN-OS virtual appliances.
+* **Cloud-Bridge**: Utilization of specialized GNS3 Cloud nodes to bridge simulated traffic into the physical network and the Azure VPN gateway.
+
+### 3. Compute and Server Roles
+The infrastructure hosts the essential identity and management services for the Zero Trust fabric:
+* **Identity Hosts**: Windows Server instances providing Active Directory Domain Services (AD DS).
+* **Policy Orchestration**: Deployment of Aruba ClearPass Policy Manager as a virtual appliance.
+* **Management Gateways**: Linux-based jump-hosts for secure administrative access.
 
 ---
 
-## Solutions Architecture Domains
+## Operational Standards
 
-To explore the technical blueprints, configuration logic, and validation logs for each module, use the links below:
+### High Availability
+The infrastructure is designed with resiliency in mind, utilizing automated backups and snapshots to ensure rapid recovery during engineering tests.
 
-| Section | Focus |
-| :--- | :--- |
-| **[Integration-Security-and-Operations](./Integration-Security-and-Operations/)** | Unified security fabric, multi-vendor orchestration, and operational visibility. |
-| **[Migration-Cloud-Modernisation](./Migration-Cloud-Modernisation/)** | Strategy and execution for transitioning legacy workloads to a hybrid cloud model. |
-| **[PoC and Validation](./PoC%20and%20Validation/)** | Engineering staging, routing verification, and protocol analysis logs. |
-
----
-
-## Design Principles
-* **Identity First**: Network location does not imply trust; identity is the primary control plane.
-* **Least Privilege**: Access is explicitly granted based on device health and user identity.
-* **Separation of Concerns**: Identity, access, routing, and enforcement are treated as distinct architectural layers.
-* **Operational Realism**: Designs reflect enterprise-grade constraints, including path redundancy and failure modes.
+### Security Hardening
+* **Management Isolation**: All infrastructure management interfaces (Proxmox, GNS3, Switch Management) are isolated on a dedicated, non-routable VLAN.
+* **Access Control**: Administrative access requires identity verification and is logged via the centralized security plane.
 
 ---
-[Return to Root README](../README.md)
+
+## Technical Validation
+
+[Image of a server rack showing organized cabling and high-density compute nodes]
+
+Functional success is verified by the seamless delivery of traffic from a simulated client in GNS3, through the Proxmox bridge, across the physical Palo Alto firewall, and into the Azure VNet.
+
+---
+[Return to Root README](../../README.md)
