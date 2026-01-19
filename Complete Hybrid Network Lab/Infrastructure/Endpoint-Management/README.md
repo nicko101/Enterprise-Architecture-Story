@@ -1,60 +1,59 @@
-# Infrastructure Layer — Hybrid Identity & Trust Services
+# Infrastructure Layer — Hybrid Identity and Trust Services
 
 ## Overview
-This section documents the core infrastructure services that underpin the Hybrid Zero Trust environment.
-These components provide identity authority, certificate-based trust, endpoint enrollment, and legacy integration required to support secure access across on-premises and Azure-hosted resources.
+This section documents the core infrastructure services that underpin the Hybrid Zero Trust environment. These components provide identity authority, certificate-based trust, endpoint enrollment, and legacy integration required to support secure access across on-premises and Azure-hosted resources.
 
-This layer is intentionally designed as foundational infrastructure, separating identity, trust, and governance concerns from network transport and enforcement.
+This layer is designed as foundational infrastructure, separating identity, trust, and governance from network transport and enforcement.
 
 ---
 
 ## Infrastructure Domains
 
 ### Active Directory (Hybrid Trust Services)
-Active Directory remains the authoritative identity source for legacy workloads and certificate issuance workflows.
+Active Directory provides the authoritative identity source for legacy workloads and certificate issuance workflows.
 
-➡️ Details:  
-[Active Directory README](./Active%20Directory/README.md)
+Location:  
+[Active Directory](./Active%20Directory/)
 
 ---
 
 ### Certificate Services (PKI and SCEP)
-Provides device and service trust using a multi-tier Public Key Infrastructure.
+Certificate Services provide device and service trust using a multi-tier Public Key Infrastructure.
 
-➡️ Details:  
-- [PKI Architecture](./Certificate-Services/PKI/README.md)  
-- [SCEP / NDES Integration](./Certificate-Services/SCEP/README.md)
+Locations:  
+[PKI](./Certificate-Services/PKI/)  
+[SCEP and NDES](./Certificate-Services/SCEP/)
 
 ---
 
 ### Endpoint Management (Microsoft Intune)
-Provides cloud-based endpoint enrollment, compliance enforcement, and device governance.
+Microsoft Intune provides the cloud-based endpoint management plane for device enrollment, compliance enforcement, and configuration governance.
 
-➡️ Details:  
-[Endpoint Management README](./Endpoint-Management/README.md)
+Location:  
+[Endpoint Management](./Endpoint-Management/)
 
 ---
 
 ### Identity Plane (Microsoft Entra)
-Provides cloud identity, conditional access, and device registration.
+Microsoft Entra ID provides cloud identity, device registration, and policy scope for enrollment and access control.
 
-➡️ Details:  
-[Microsoft Entra README](./Entra/README.md)
+Location:  
+[Entra](./Entra/)
 
 ---
 
 ### Identity Services (RBAC and Governance)
-Documents how identity is consumed and enforced across the environment.
+Documents how identity is consumed and enforced across the environment, including delegated administration and governance controls.
 
-➡️ Details:  
-[Identity Services README](./Identity-Services/README.md)
+Location:  
+[Identity Services](./Identity-Services/)
 
 ---
 
 ## Navigation
 
-- Return to Hybrid Network Lab Root  
-  ../README.md
+Return to Hybrid Network Lab Root:  
+../README.md
 
-- Return to Repository Home  
-  ../../README.md
+Return to Repository Home:  
+../../README.md
