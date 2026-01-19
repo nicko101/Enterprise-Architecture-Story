@@ -1,37 +1,47 @@
+# Role-Based Access Control: Hybrid Identity Governance
 
-# 🔑 Identity Services & RBAC Governance
+## Overview
+This section documents the enforcement of identity-driven security across the hybrid fabric. Access is governed by the principle of least privilege (PoLP), ensuring that users, service principals, and managed identities are granted only the minimum permissions required to perform their functions.
 
-## 📖 Overview
-This directory documents the foundational identity services and **Role-Based Access Control (RBAC)** frameworks used to secure the hybrid ecosystem. By centralizing identity as the modern security perimeter, the lab ensures that every access request is verified based on identity, device posture, and granular permissions.
-
-## 📂 Core Governance Components
-
-### 🛡️ Service Principal Governance (App Registrations)
-The lab utilizes specific App Registrations in Entra ID to grant on-premises security tools secure, machine-to-machine (M2M) access to the Microsoft Graph API.
-* **CPPM-Native-Lookup**: Enables Aruba ClearPass to query real-time user and device metadata from Entra ID for access decisions.
-* **ndes-proxy**: Bridges the on-premises NDES/SCEP server to Microsoft Intune for automated certificate deployment.
-* **Least Privilege**: Each application is restricted to the minimum necessary Graph API scopes (e.g., `User.Read.All`), ensuring a zero-trust footprint.
-
-### 🤝 Hybrid Identity Handshake
-The environment maintains a unified identity plane by synchronizing the local Active Directory forest with Entra ID.
-* **Identity Correlation**: Utilizes Entra Connect to map on-premises SIDs to cloud identities, allowing for consistent policy enforcement across the hybrid fabric.
-* **SSO Readiness**: Prepares the infrastructure for certificate-based Single Sign-On (SSO) for services like the Palo Alto GlobalProtect VPN.
-
-### 🏗️ On-Premises Administrative Tiering
-Documentation of the identity segmentation model used to prevent lateral movement within the lab core.
-* **OU Governance**: Administrative and service accounts are isolated into dedicated Organizational Units (OUs) to apply targeted Group Policy Objects (GPOs).
-* **Identity Context (User-ID)**: User identity is shared with the Palo Alto NGFW via the User-ID agent to allow for granular, role-based firewall policies.
-
-## 🖼️ Operational Evidence
-![Entra App Registrations](./evidence/entra-app-registrations.png)
-*Figure 1: Inventory of modern identity integrations via Entra App Registrations.*
-
-![PKI Health Status](./evidence/pki-health-view.png)
-*Figure 2: Validation of the Enterprise PKI health, the root of trust for all lab identities.*
+[![RBAC Solutions Overview](https://raw.githubusercontent.com/nicko101/Enterprise-Architecture-Portfolio/main/resources/slides/RBAC.png)](https://raw.githubusercontent.com/nicko101/Enterprise-Architecture-Portfolio/main/resources/slides/RBAC.png)
+*Figure 1: High-level solution architecture detailing the relationship between identity providers, enforcement points, and hybrid cloud resources.*
 
 ---
 
-## 🛠️ Design Principles
-1. **Least Privilege (M2M)**: Service principals are granted only the specific API permissions required for their specific function to minimize the security blast radius.
-2. **Identity-Driven Access**: Network access decisions are based on the user's role and device health, rather than static credentials.
-3. **Audit Readiness**: All identity-based events are logged across the hybrid fabric for centralized monitoring and forensic analysis.
+## Dual-Layer Access Governance
+In this hybrid environment, storage and file access require a two-tier authorization model to bridge cloud identity (Microsoft Entra ID) with on-premises resource management.
+
+### 1. Share-Level Permissions (Azure RBAC)
+Azure RBAC acts as the "Gatekeeper" at the storage account level. It determines if an identity has the right to access the resource over the network.
+* **Storage File Data SMB Share Reader**: For read-only access to file shares.
+* **Storage File Data SMB Share Contributor**: For standard read/write/delete operations.
+* **Storage File Data SMB Share Elevated Contributor**: Required for administrators to modify NTFS ACLs.
+
+### 2. File-Level Permissions (NTFS ACLs)
+Once the RBAC gate is passed, standard Windows NTFS permissions are enforced at the directory and file level. This allows for granular control (e.g., Finance team seeing only the 'Payroll' folder within a shared drive).
+
+---
+
+## Identity Synchronization Flow
+To enable seamless access for on-premises users to cloud-hosted storage (Azure Files), a hybrid identity flow is implemented:
+
+1. **Active Directory (On-Prem)**: Serves as the authoritative source of truth for user identities.
+2. **Entra Connect**: Synchronizes identities to Microsoft Entra ID (Azure AD).
+3. **Domain Joining**: The Azure Storage Account is joined to the local Active Directory domain.
+4. **Kerberos Authentication**: Clients utilize Kerberos tickets from the local Domain Controller to authenticate against the Azure File Share.
+
+---
+
+## Operational Configuration
+The following technical artifact shows the engineering view of the role assignments utilized to manage the laboratory environment.
+
+[![RBAC Assignments](https://raw.githubusercontent.com/nicko101/Enterprise-Architecture-Portfolio/main/resources/slides/PKItemplate.png)](https://raw.githubusercontent.com/nicko101/Enterprise-Architecture-Portfolio/main/resources/slides/PKItemplate.png)
+*Figure 2: Role assignment configuration in the Azure Portal, showcasing data-plane access for synced hybrid identities.*
+
+### Best Practices Enforced
+* **Group-Based Access**: Roles are assigned to Entra ID Groups rather than individual users to simplify lifecycle management.
+* **Separation of Planes**: Control Plane access (Owner/Contributor) is strictly separated from Data Plane access (Storage Blob/File Data roles).
+* **Least Privilege**: Global Admin privileges are used only for identity configuration, while day-to-day data access relies on scoped data roles.
+
+---
+[Return
