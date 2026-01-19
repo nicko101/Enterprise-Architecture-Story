@@ -1,42 +1,47 @@
-# Hybrid Zero Trust Architecture: Engineering Portfolio
+# Security Engineering and Identity Governance
 
 ## Overview
-This repository documents the engineering and governance of a multi-vendor hybrid environment. The project serves as a functional staging area to bridge on-premises virtualization with Microsoft Azure, creating a unified security fabric centered on identity-based policy enforcement and automated trust delivery.
+This directory documents the implementation of the Zero Trust security fabric. The architecture moves beyond traditional perimeter defense by treating identity as the primary control plane. Every connection request—whether from inside or outside the physical network—is explicitly authenticated and authorized before access is granted.
 
-**Project Status:** Active engineering build. Documentation and technical artifacts are updated regularly as new integration modules are validated.
-
-[![Key Integration Framework](https://raw.githubusercontent.com/nicko101/Enterprise-Architecture-Portfolio/main/resources/slides/keyintgration.png)](https://raw.githubusercontent.com/nicko101/Enterprise-Architecture-Portfolio/main/resources/slides/keyintgration.png)
-*Figure 1: Full-stack integration summary across Identity, Trust, Access, Perimeter, and Hybrid Cloud.*
+[![Architecture Summary](https://raw.githubusercontent.com/nicko101/Enterprise-Architecture-Portfolio/main/resources/slides/summary.png)](https://raw.githubusercontent.com/nicko101/Enterprise-Architecture-Portfolio/main/resources/slides/summary.png)
+*Figure 1: High-level solution architecture detailing the relationship between identity providers, enforcement points, and hybrid cloud resources.*
 
 ---
 
-## Solutions Architecture
-The environment is built on a modular architecture designed to scale and adapt to enterprise-grade security requirements. It spans four primary domains:
+## Operational Workflow
+Authentication requests follow a specific sequence to ensure zero-trust compliance. This process validates device health via the cloud before granting local network access.
 
-* **Identity and Trust Plane**: Managed via a two-tier PKI (Root and Intermediate CA) and Microsoft Entra ID synchronization.
-* **Access and Enforcement Plane**: Context-aware admission utilizing Aruba ClearPass policy orchestration and Microsoft Intune device compliance.
-* **Connectivity and Routing Plane**: Hybrid transit utilizing secure IPsec tunneling and predictable path selection between local Edge and Azure Virtual Network Gateways.
-* **Infrastructure and Hosting Plane**: High-availability compute via a Proxmox virtualization cluster and GNS3-simulated network fabrics.
+[![Zero Trust Workflow](https://raw.githubusercontent.com/nicko101/Enterprise-Architecture-Portfolio/main/resources/images/Zero-Trust-Workflow.png)](https://raw.githubusercontent.com/nicko101/Enterprise-Architecture-Portfolio/main/resources/images/Zero-Trust-Workflow.png)
+*Figure 2: Technical workflow detailing the handshake between the network access control layer (Aruba ClearPass) and the Microsoft Graph API for compliance verification.*
 
 ---
 
-## Portfolio Navigation
-These links are verified to match the repository structure. Clicking these will lead reviewers directly to the technical deep-dives.
+## Core Security Pillars
 
-| Category | Deep-Dive Links |
-| :--- | :--- |
-| **Integrated Lab Environment** | [Complete Hybrid Network Lab](./Complete%20Hybrid%20Network%20Lab/) |
-| **Architecture Playbook** | [Solutions Architecture](./Solutions_Architecture/) |
-| **Security and Identity** | [Security Deep-Dive](./Complete%20Hybrid%20Network%20Lab/Security/) |
-| **Technical Assets** | [Image Resources](./resources/images/) \| [Architectural Slides](./resources/slides/) |
+### 1. Identity Governance (Hybrid Entra ID)
+* **Hybrid Synchronization**: Integration of on-premises Active Directory with Microsoft Entra ID.
+* **Conditional Access**: Enforcement of modern authentication and MFA for high-risk resources.
+* **Role-Based Access Control (RBAC)**: Implementation of least privilege across local and cloud management planes.
+
+### 2. Trust and Certificate Lifecycle (Multi-Tier PKI)
+* **Root and Intermediate CA**: Deployment of a secure, offline-capable Root CA and an online Intermediate CA.
+* **Automated Enrollment**: Utilization of SCEP/NDES to automate the delivery of device certificates to managed endpoints via Microsoft Intune.
+
+### 3. Network Access Control (Aruba ClearPass)
+* **Context-Aware Enforcement**: ClearPass orchestrates access decisions based on user identity and real-time compliance status.
+* **802.1X Orchestration**: Implementation of EAP-TLS to ensure only hardware with valid certificates can join the fabric.
+
+### 4. Edge Security (Palo Alto NGFW)
+* **App-ID Policy Enforcement**: Transition from port-based rules to application-aware security policies.
+* **SSL Forward Proxy**: Selective decryption of outbound traffic to protect against encrypted threats and data exfiltration.
 
 ---
 
-## Technical Standards and Validation
-Functional success is proven through operational evidence:
-* **Traffic Observability**: Real-time logs from Palo Alto and ClearPass telemetry.
-* **Compliance Reporting**: Live status dashboards from Microsoft Intune and Azure Backup status.
-* **Engineering Documentation**: Repeatable deployment templates for hybrid infrastructure.
+## Technical Validation
+The security posture is continuously validated through:
+* **Real-time Telemetry**: Monitoring of authentication logs and policy hits within the ClearPass Access Tracker.
+* **Threat Observability**: Application-layer visibility and threat logging on the Palo Alto Edge.
+* **Device Health Check**: Verification that only "Compliant" devices are permitted on the internal network.
 
 ---
-Engineering Portfolio | Focused on Resilient Security Architectures
+[Return to Root README](../../README.md)
