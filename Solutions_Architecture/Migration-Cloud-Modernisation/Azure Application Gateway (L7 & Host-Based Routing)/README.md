@@ -1,24 +1,64 @@
-# Migration - Azure Application Gateway (L7 & Host-Based Routing)
+# Azure Hub-and-Spoke Infrastructure: Application Gateway Integration
 
-## 🎯 Project Objective
-The objective of this module is to architect a centralized ingress point for web traffic using a **Standard_v2 Azure Application Gateway**. This configuration demonstrates advanced **Layer 7 load balancing** capabilities, allowing a single gateway to route traffic to multiple backend services based on the incoming HTTP host header.
+## Project Documentation
+Detailed architectural briefings and executive summaries for this project can be found here:
+* **Presentation Deck**: [Azure Hub-Spoke Infrastructure Blueprint (PDF)](../../../resources/slidedecks/Azure_Hub_Spoke_Infrastructure_Blueprint.pdf)
 
-## 🖼️ Architecture: The L7 Edge
-This solution is deployed within a **Hub-and-Spoke** network topology, providing a governed entry point for external traffic before it reaches the backend application spokes.
+---
 
-* [cite_start]**Host-Based Routing**: Traffic is programmatically directed to specific backend pools based on whether the request is for `vm1.nginx.local` or `vm2.lab01.local`[cite: 33].
-* [cite_start]**Network Integration**: The gateway is deployed into a dedicated subnet (`10.14.0.0/24`) with peering to a central hub (`172.16.0.0/16`)[cite: 33].
-* [cite_start]**Hybrid Reachability**: The architecture includes a **VPN Gateway** (`nf-vpngw`) to allow for secure management and connectivity back to on-premises environments[cite: 33].
-* [cite_start]**Enterprise Scalability**: Configured with **Autoscale** (1-10 units) to handle variable enterprise workloads[cite: 33].
+## Executive Summary
+This project demonstrates the deployment of a comprehensive hub-and-spoke network topology within Microsoft Azure using Infrastructure as Code. The architecture establishes a central Hub Virtual Network (VNet) for shared connectivity and a peered Spoke VNet for application ingress. This design effectively segregates the application ingress point from core network services and workloads.
 
-## 📊 Routing Logic Summary
-| Listener | Hostname | Backend Target | Priority |
-| :--- | :--- | :--- | :--- |
-| `nf-list1` | `vm1.nginx.local` | `172.16.0.4` | 1 |
-| `list2` | `vm2.lab01.local` | `172.16.0.5` | 2 |
 
-## 🛠️ Implementation Details (ARM)
-The included deployment template (`applicationGateways_nf_appgw.json`) automates the following:
-* [cite_start]**Public IP**: Standard SKU static IP with Zone Redundancy[cite: 33].
-* [cite_start]**NSG Security**: Lockdown of backend subnets with specific SSH/HTTP allow rules[cite: 33].
-* [cite_start]**Resource Governance**: Tagged with `Creator: Nick Fennell` and `DateCreated: 06/20/2025` for enterprise lifecycle management[cite: 33].
+
+---
+
+## I. Core Architectural Design: Hub-and-Spoke Topology
+The deployment utilizes a modular hub-and-spoke model, interconnected via bidirectional VNet peering to ensure seamless cross-network communication.
+
+* **Hub Virtual Network (nf-hubvnet)**: Address Space `172.16.0.0/16`. Hosts backend virtual machine workloads and the central VPN Gateway.
+* **Spoke Virtual Network (nf-vnet-appgw)**: Address Space `10.14.0.0/16`. Dedicated to the Standard_v2 Application Gateway.
+
+**VNet Peering Configuration**:
+* **Hub to Spoke**: Configured with gateway transit allowed, enabling the spoke to utilize the hub's VPN for external connectivity.
+* **Spoke to Hub**: Configured to use remote gateways, directing traffic destined for outside the Azure network through the hub.
+
+---
+
+## II. Centralized Connectivity and Workloads (Hub VNet)
+The hub serves as the primary integration point for hybrid cloud connectivity and core compute resources.
+
+### Hybrid Connectivity
+A site-to-site IPsec connection integrates the Azure environment with an on-premises network endpoint.
+* **VPN Gateway**: VpnGw1 SKU terminating at Public IP `20.160.99.165`.
+* **Local Network Gateway**: Represents the on-premises network with gateway IP `37.228.231.33`.
+* **Connection**: Utilizes IPsec/IKEv2 for resilient, encrypted transit.
+
+### Compute Workloads
+Two Linux virtual machines (Ubuntu 24.04 LTS) are provisioned directly within the hub.
+* **Instances**: nf-vm1 (172.16.0.4) and nf-vm2 (172.16.0.5).
+* **Security**: Configured with Trusted Launch, Secure Boot, and vTPM for hardware-level integrity.
+
+---
+
+## III. Application Delivery and Ingress (Spoke VNet)
+The spoke VNet manages public-facing traffic ingress via a sophisticated Layer 7 Application Gateway.
+
+
+
+* **Application Gateway**: Standard_v2 SKU with autoscaling and multi-zone availability.
+* **Host-Based Routing**: The gateway utilizes unique listeners to route traffic based on requested hostnames:
+    * `vm1.nginx.local` → Routed to the backend pool.
+    * `vm2.lab01.local` → Routed to the backend pool.
+* **Backend Address Pool**: Targets the private IPs of the virtual machines located within the peered Hub VNet.
+
+---
+
+## IV. Security and Network Configuration
+Security is enforced through multi-layered Network Security Groups (NSGs) and advanced VM security features.
+
+* **Network Security Groups**: Attached to each VM interface to control inbound traffic flow, including specific rules for management access via SSH.
+* **Trusted Launch**: Provides UEFI security, ensuring that only verified operating systems and drivers can start.
+
+---
+[Return to Solutions Architecture](../../README.md) | [Return to Root](../../../README.md)
