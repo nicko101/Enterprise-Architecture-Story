@@ -32,8 +32,8 @@ This directory serves as the technical "As-Built" documentation for the implemen
 * [Certificate-Services](./Infrastructure/Certificate-Services): PKI hierarchy and NDES/SCEP configuration.
 
 ### Networking
-* [Edge Security and Routing](./Networking/Edge%20Security%20%26%20Routing): BGP configuration and VLAN segmentation.
-* [Cloud Networking](./Networking/Cloud%20Networking): Azure VPN Gateway and Virtual WAN integration.
+### Routing
+* [Routing](./Routing): Edge and cloud routing including BGP, VLAN segmentation, Azure VPN Gateway, and Virtual WAN.
 
 ### Security
 * [Network Access Control](./Security/identity-governance/network-access-control): Aruba ClearPass policy logic and service orchestration.
