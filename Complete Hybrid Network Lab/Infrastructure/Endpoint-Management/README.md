@@ -1,123 +1,148 @@
-# Endpoint Management — Microsoft Intune Integration
+# Infrastructure Layer — Hybrid Identity & Trust Services
 
 ## Overview
-This section documents the endpoint management and compliance control plane for the hybrid Zero Trust lab environment. Microsoft Intune is used as the authoritative cloud-based management platform for both cloud-only and hybrid-joined endpoints.
+This section documents the **core infrastructure services** that underpin the Hybrid Zero Trust environment.  
+These components provide identity authority, certificate-based trust, endpoint enrollment, and legacy integration required to support secure access across on-premises and Azure-hosted resources.
 
-Endpoint management is designed around a **compliance-first access model**, where device health and identity directly influence authentication, authorization, and network access decisions across the environment.
+This layer is intentionally designed as **foundational infrastructure**, separating identity, trust, and governance concerns from network transport and enforcement.
 
-This layer integrates tightly with identity services, certificate infrastructure, and network enforcement components to ensure consistent, policy-driven endpoint governance.
-
----
-
-## Management Scope
-
-Endpoint Management in this environment covers:
-
-- Cloud-managed Windows endpoints (Microsoft Entra ID joined)
-- Hybrid identity-aware devices (Active Directory + Entra ID)
-- Certificate-based device identity for network access
-- Continuous compliance evaluation and enforcement
-
-All managed endpoints participate in the Zero Trust control flow and are treated as untrusted until validated.
+**Project Status:** Active engineering build. Infrastructure components are incrementally validated and integrated into higher-layer security and access workflows.
 
 ---
 
-## Core Capabilities
+## Infrastructure Domains
 
-### Device Enrollment
-Devices are onboarded using standardized enrollment methods:
+The infrastructure layer is composed of the following tightly scoped service domains.
 
-- Microsoft Entra ID Join for cloud-native devices
-- Hybrid scenarios supported where required
-- Enrollment establishes device identity and management authority
+### Active Directory (Hybrid Trust Services)
+Active Directory remains the authoritative identity source for legacy workloads and certificate issuance workflows.
 
----
+Responsibilities include:
+- User and computer identity authority
+- Service account management
+- Certificate enrollment dependencies
+- Hybrid integration with Microsoft Entra ID
 
-### Certificate-Based Device Identity
-Endpoint identity is established using certificates rather than passwords.
+📂 **Location:**  
+`Infrastructure/Active Directory/`
 
-- Certificates are issued via SCEP from the on-premises NDES infrastructure
-- Intune delivers and manages certificate profiles
-- Certificates are used for EAP-TLS authentication and device trust validation
-
-This ensures strong, non-replayable device identity across wired, wireless, and VPN access.
-
----
-
-### Compliance and Posture Evaluation
-Intune continuously evaluates endpoint health and configuration state.
-
-Typical compliance signals include:
-
-- Disk encryption status (BitLocker)
-- Operating system version and patch level
-- Antivirus and security feature state
-- Device integrity and enrollment status
-
-Compliance state is treated as dynamic and authoritative.
+➡️ **Details:**  
+[Active Directory README](./Active%20Directory/README.md)
 
 ---
 
-### Network Access Enforcement Integration
-Endpoint compliance is integrated with network enforcement platforms.
+### Certificate Services (PKI & SCEP)
+Certificate Services provide **device and service trust** across the environment using a multi-tier Public Key Infrastructure.
 
-- Compliance state is consumed by Aruba ClearPass
-- Non-compliant devices are denied or restricted at the network edge
-- Enforcement decisions are made in real time based on device posture
+Architecture:
+- Standalone Root Certificate Authority
+- Online Intermediate CA
+- NDES/SCEP for automated certificate delivery
 
-This removes static trust assumptions and enforces continuous verification.
+This enables:
+- EAP-TLS for wired and wireless access
+- Machine authentication
+- Secure service-to-service communication
 
----
+📂 **Location:**  
+`Infrastructure/Certificate-Services/`
 
-### Application Deployment and Configuration
-Endpoints are standardized through centralized policy and application delivery.
-
-- Core applications and security agents are deployed automatically
-- Configuration profiles enforce baseline security settings
-- PowerShell scripts are used for configuration consistency where required
-
----
-
-## Architectural Role
-
-Endpoint Management acts as the **device trust authority** within the architecture:
-
-- Identity confirms who the user is
-- Certificates confirm what the device is
-- Compliance confirms whether the device is allowed access
-
-This layer ensures that access decisions are not based solely on credentials or network location.
+➡️ **Details:**  
+- [PKI Architecture](./Certificate-Services/PKI/README.md)  
+- [SCEP / NDES Integration](./Certificate-Services/SCEP/README.md)
 
 ---
 
-## Related Architecture Components
+### Endpoint Management (Microsoft Intune)
+Microsoft Intune provides the **cloud-based endpoint management plane** for all managed devices.
 
-### Certificate Services
-Provides device identity and certificate lifecycle management.
+Key capabilities:
+- Azure AD / Entra ID join and enrollment
+- Certificate delivery via SCEP
+- Compliance enforcement
+- Device posture signaling to network enforcement systems
 
-- PKI (Root and Intermediate CAs):  
-  ../Certificate-Services/PKI/README.md
+Intune acts as a **real-time compliance authority** rather than a passive MDM platform.
 
-- SCEP / NDES:  
-  ../Certificate-Services/SCEP/README.md
+📂 **Location:**  
+`Infrastructure/Endpoint-Management/`
+
+➡️ **Details:**  
+[Endpoint Management README](./Endpoint-Management/README.md)
 
 ---
 
 ### Identity Plane (Microsoft Entra)
-Provides user and device identity, enrollment authority, and policy scope.
+Microsoft Entra ID serves as the **cloud identity control plane** for the hybrid environment.
 
-../Entra/README.md
+Functions include:
+- Identity synchronization from Active Directory
+- Conditional Access policy enforcement
+- Application identity and access governance
+- Device registration and trust evaluation
+
+📂 **Location:**  
+`Infrastructure/Entra/`
+
+➡️ **Details:**  
+[Microsoft Entra README](./Entra/README.md)
 
 ---
 
-### Active Directory (Hybrid Trust Services)
-Supports certificate issuance and legacy identity integration where required.
+### Identity Services (RBAC & Governance)
+This domain documents how identity is **consumed and enforced** across the environment.
 
-../Active Directory/README.md
+Includes:
+- Role-Based Access Control (RBAC)
+- Delegated administration models
+- Evidence artifacts for validation and auditing
+
+📂 **Location:**  
+`Infrastructure/Identity-Services/`
+
+➡️ **Details:**  
+[Identity Services README](./Identity-Services/README.md)
 
 ---
 
-## Summary
-Microsoft Intune provides the foundation for endpoint trust, compliance enforcement, and configuration governance in this hybrid Zero Trust environment.
+## Design Principles
 
-By integrating certificate-based identity, continuous compliance evaluation, and real-time network enforcement, this layer ensures that endpoint access is earned, validated, and continuously re-evaluated rather than implicitly trusted.
+The infrastructure layer adheres to the following principles:
+
+- **Identity First**  
+  Authentication and authorization precede network access.
+
+- **Certificate-Based Trust**  
+  Device and service identity relies on cryptographic trust, not passwords.
+
+- **Separation of Concerns**  
+  Identity, certificate services, enforcement, and routing are independently managed.
+
+- **Hybrid by Design**  
+  Cloud-native services are integrated without breaking legacy dependencies.
+
+- **Operational Realism**  
+  Designs reflect real enterprise constraints, failure modes, and recovery paths.
+
+---
+
+## Role in the Overall Architecture
+
+This infrastructure layer directly supports:
+
+- Network Access Control (ClearPass)
+- Zero Trust access enforcement
+- Secure hybrid routing and segmentation
+- Cloud and on-prem workload protection
+
+No access decision is made without a dependency on **one or more components in this layer**.
+
+---
+
+## Navigation
+
+- ↑ Return to **Hybrid Network Lab Root**  
+  ../README.md
+
+- ⌂ Return to **Repository Home**  
+  ../../README.md
