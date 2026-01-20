@@ -4,7 +4,8 @@
 The following resources document the design, validation, and executive briefing for this modernization project:
 * **Technical Slide Deck**: [Cloud PKI & Intune Deployment Briefing (PDF)](../../../resources/slidedecks/Cloud_PKI_Intune_Deployment.pdf)
 * **Architecture Mapping**: [Modern PKI Flow Visual](#modern-pki-architecture)
-* **Deployment Checklist**: [Engineering Validation Checklist](#deployment-checklist-and-validation)
+* **Configuration Design**: [Intune SCEP Template](#scep-profile-configuration-intune)
+* **Operational Proof**: [Success Confirmation](#operational-success--validation)
 
 ---
 
@@ -22,7 +23,6 @@ The following diagram illustrates the transition from legacy, internet-exposed N
 ---
 
 ## Technical Strategy
-The goal of this deployment is to allow Microsoft Intune to deliver SCEP profiles to mobile and remote endpoints without direct internet exposure of internal PKI services.
 
 ### SCEP Profile Configuration (Intune)
 The SCEP profile within Microsoft Intune is the "instruction set" for the endpoint. The following configuration captures the integration with the Azure App Proxy External URL and the specific certificate attributes required for hybrid trust.
@@ -32,31 +32,35 @@ The SCEP profile within Microsoft Intune is the "instruction set" for the endpoi
 
 ---
 
-## Deployment Checklist and Validation
-The engineering checklist below was used to validate the end-to-end configuration, ensuring that the Intune SCEP profiles correctly map to the NDES server's requirements.
+## Operational Success & Validation
+Final validation is confirmed by the successful delivery of the SCEP certificate to the managed endpoint. The following confirmation from the Intune portal verifies that the policy has been successfully applied and the device has received its identity certificate via the secure App Proxy tunnel.
 
-[![Deployment Checklist](https://raw.githubusercontent.com/nicko101/Enterprise-Architecture-Portfolio/main/resources/images/Cloud%20PKI%20Intune%20Deployment-checklist.png)](https://raw.githubusercontent.com/nicko101/Enterprise-Architecture-Portfolio/main/resources/images/Cloud%20PKI%20Intune%20Deployment-checklist.png)
-*Figure 3: Technical validation checklist for the Cloud PKI and Intune SCEP deployment.*
+![Intune SCEP Success Confirmation](../../../resources/slides/scp_proof.png)
+*Figure 3: Intune Portal confirmation showing successful certificate delivery and profile compliance.*
+
+---
+
+## Technical Verification & Logs
+To ensure the integrity of the enrollment process, validation was performed across three distinct layers:
+
+### 1. Endpoint Layer (Windows Event Viewer)
+Verified on the client device under `Applications and Services Logs > Microsoft > Windows > DeviceManagement-Enterprise-Diagnostics-Provider > Admin`:
+* **Event ID 36**: "Certificate request generated successfully."
+* **Event ID 309**: "Certificate delivered successfully to the device."
+
+### 2. Network Layer (IIS Logs)
+On the NDES server, IIS logs (`%SystemDrive%\inetpub\logs\logfiles\w3svc1`) were monitored for the following:
+* **HTTP Status 200**: Confirms successful GET/POST requests for `mscep.dll`.
+
+### 3. Proxy Layer (Entra Private Network Connector)
+Verified via the Connector logs under `Applications and Services Logs > Microsoft > Microsoft Entra private network > Connector > Admin`:
+* Confirmed authenticated outbound sessions mapping the external Intune request to the internal NDES IP.
 
 ---
 
 ## Engineering Highlights
-
-### Security Posture
-* **Outbound-Only Connectivity**: By using the App Proxy connector, the corporate firewall requires zero inbound port openings (80/443), significantly reducing the attack surface.
-* **Identity-Aware Access**: Access to the NDES URL is governed by Entra ID, adding a layer of identity validation before the request ever touches the internal network.
-
-### SCEP Enrollment Flow
-1. **Intune Policy**: Managed device receives the SCEP configuration profile.
-2. **Proxy Request**: The device attempts to contact the SCEP URL via the Azure App Proxy External URL.
-3. **Connector Forwarding**: The on-premises connector pulls the request from Azure and forwards it to the local NDES server.
-4. **CA Issuance**: The Issuing CA verifies the challenge and issues the machine certificate.
-
----
-
-## PoC Artifacts
-* **Configuration Overview**: Generated via NotebookLM analysis of internal SCEP profiles.
-* **PKI Hierarchy Details**: [View Root CA and Issuing CA Design](../../../Complete%20Hybrid%20Network%20Lab/Security/PKI/)
+* **Zero Inbound Ports**: The corporate firewall requires no inbound ports (80/443), as the App Proxy connector uses an outbound-only authenticated tunnel.
+* **PKI Isolation**: The Issuing CA and NDES role are kept entirely within the internal network, meeting the highest "Zero Trust" security standards.
 
 ---
 [Return to Solutions Architecture](../../README.md) | [Return to Root](../../../README.md)
