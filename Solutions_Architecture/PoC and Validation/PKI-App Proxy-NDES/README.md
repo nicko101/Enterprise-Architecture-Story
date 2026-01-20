@@ -24,10 +24,11 @@ The following diagram illustrates the transition from legacy, internet-exposed N
 ## Technical Strategy
 The goal of this deployment is to allow Microsoft Intune to deliver SCEP profiles to mobile and remote endpoints without direct internet exposure of internal PKI services.
 
-### Key Components
-* **Azure App Proxy Connector**: Installed on-premises to establish an authenticated outbound tunnel to Azure.
-* **External URL**: Provides a secure endpoint for Intune to communicate with the SCEP service.
-* **Pre-authentication**: Leverages Microsoft Entra ID to ensure only authorized traffic reaches the NDES server.
+### SCEP Profile Configuration (Intune)
+The SCEP profile within Microsoft Intune is the "instruction set" for the endpoint. The following configuration captures the integration with the Azure App Proxy External URL and the specific certificate attributes required for hybrid trust.
+
+![Intune SCEP Template Configuration](../../../resources/slides/SCEP.png)
+*Figure 2: Intune SCEP Profile Template showing the External App Proxy URL and Certificate Authority attributes.*
 
 ---
 
@@ -35,15 +36,7 @@ The goal of this deployment is to allow Microsoft Intune to deliver SCEP profile
 The engineering checklist below was used to validate the end-to-end configuration, ensuring that the Intune SCEP profiles correctly map to the NDES server's requirements.
 
 [![Deployment Checklist](https://raw.githubusercontent.com/nicko101/Enterprise-Architecture-Portfolio/main/resources/images/Cloud%20PKI%20Intune%20Deployment-checklist.png)](https://raw.githubusercontent.com/nicko101/Enterprise-Architecture-Portfolio/main/resources/images/Cloud%20PKI%20Intune%20Deployment-checklist.png)
-*Figure 2: Technical validation checklist for the Cloud PKI and Intune SCEP deployment.*
-
----
-
-## Operational Proof: Intune SCEP Confirmation
-Success is verified through the successful deployment of the SCEP certificate profile to endpoints. The following capture from the Intune portal confirms the device state and certificate delivery success via the App Proxy endpoint.
-
-![Intune SCEP Confirmation](../../../resources/slides/SCEP.png)
-*Figure 3: Intune Portal confirmation showing successful SCEP profile deployment and device compliance.*
+*Figure 3: Technical validation checklist for the Cloud PKI and Intune SCEP deployment.*
 
 ---
 
