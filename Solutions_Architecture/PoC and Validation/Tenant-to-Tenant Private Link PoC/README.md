@@ -1,122 +1,118 @@
-# Azure Hybrid Networking & Private Service Projection  
-## Tenant-to-Tenant Private Link — Incident Root Cause Analysis
+# Azure Private Link Hybrid Blueprint  
+**Tenant-to-Tenant Private Link — Business-Critical Incident Resolution**
 
 ---
 
 ## Overview
 
-This project documents a **business-critical tenant-to-tenant Azure Private Link incident** impacting a production workload, where prolonged downtime resulted in direct operational and financial impact.
+This project documents the resolution of a **business-critical Azure Private Link connectivity incident** impacting a high-value customer, where every minute of downtime resulted in direct financial and operational loss.
 
-The supplier initially attributed the issue to the consumer environment (DNS, routing, firewall).  
-To break escalation deadlock — including live troubleshooting with Microsoft — a **production-accurate reference lab** was deployed to isolate fault domains.
+Initial escalation focused on the **consumer environment** (routing, VPN, DNS).  
+To break the deadlock — including live calls with Microsoft — a **production-accurate reference lab** was built to isolate fault domains and prove root cause.
 
 The lab conclusively demonstrated:
 
-- **DNS was the initial blocker**
-- Once DNS was resolved, the **final root cause was a misconfigured Azure Load Balancer rule** in the provider environment
+- DNS was the **initial blocking issue**
+- After DNS resolution was fixed, the **final blocker** was a **misconfigured Azure Load Balancer rule**
+- The issue was **not** VPN, routing, firewall, or Microsoft backbone related
 
 ---
 
-## Complete End-to-End Architecture
+## Architecture Blueprint (High-Level)
 
-![Complete Architecture](../../../resources/slides/pls/cross-summary.png)
+This diagram establishes the **end-to-end hybrid Private Link model** used throughout the investigation.
 
-This diagram represents the **validated, working end-to-end design**, including:
+![Azure Hybrid Networking & Private Link Architecture](../../../resources/slides/pls/pls.png)
 
-- On-premises clients and DNS
-- Hybrid VPN connectivity
-- Consumer hub VNet
-- Private Endpoint termination
-- Provider-side service exposure via Private Link
-- Backend SQL service hosted on a VM
-
----
-
-## Hybrid Connectivity Foundation
-
-![Hybrid Bridge](../../../resources/slides/pls/bridge.png)
-
-An **IPsec IKEv2 Site-to-Site VPN** extends the on-premises environment into Azure, enabling:
-
-- Real client traffic paths
-- Enterprise DNS resolution
-- Accurate Private Endpoint testing under production conditions
+**Key characteristics:**
+- On-premises users connect via IPsec VPN
+- North Europe acts as the consumer hub
+- West Europe hosts the provider service
+- All service access is enforced via Azure Private Link
 
 ---
 
-## Consumer Hub — North Europe
+## Cross-Region Private Link Connectivity
 
-![Consumer Hub](../../../resources/slides/pls/consumer-hub.png)
+This view focuses on **how traffic flows across regions and tenants**.
 
-The consumer hub VNet provides:
+![Cross-Region Private Link](../../../resources/slides/pls/cross-summary.png)
 
-- Dedicated `GatewaySubnet`
-- VM workload subnet
-- Dedicated Private Endpoint subnet
-- Custom DNS configuration aligned with on-premises resolvers
+**What this proves:**
+- Traffic traverses the **Microsoft backbone only**
+- No VNet peering exists between tenants
+- The Private Endpoint terminates in the consumer hub
+- The Private Link Service projects the provider workload
+
+At this stage, connectivity was **still failing**, confirming the issue was **not network transport**.
+
+---
+
+## DNS Resolution Failure — The First Root Cause
+
+### The DNS Puzzle (On-Premises)
+
+The true initial failure was **name resolution**, not connectivity.
+
+![On-Premises DNS Resolution](../../../resources/slides/pls/on-premdns.png)
+
+**Problem:**
+- On-premises DNS servers **cannot resolve Azure Private DNS zones**
+- `privatelink.*` records were never returned
+- Clients could not reach the Private Endpoint IP
 
 ---
 
 ## DNS Resolution Strategy (Manual & Conditional)
 
-### Azure-Side DNS
+This diagram represents the **final, working DNS architecture**.
 
-![Azure Private DNS](../../../resources/slides/pls/private-dns.png)
+![Custom DNS Zone](../../../resources/slides/pls/customdnszone.png)
 
-Azure Private DNS is used to resolve `privatelink.*` records **within the hub VNet** via Private DNS Zone linking.
+**Solution implemented in the lab:**
+- Manual forward lookup zones created on-prem
+- Private Link FQDNs mapped directly to Private Endpoint IPs
+- Split-horizon DNS enforced for hybrid resolution
 
-> **Important:**  
-> Azure Private DNS is **recommended but not strictly required**.  
-> A manual DNS record pointing directly to the Private Endpoint IP is technically valid and was used during troubleshooting.
-
----
-
-### On-Premises DNS (Split-Horizon)
-
-![On-Prem DNS](../../../resources/slides/pls/on-premdns.png)
-
-On-premises DNS servers cannot natively resolve Azure Private DNS zones.
-
-Resolution was achieved using:
-
-- Manual forward lookup zones or conditional forwarders
-- Explicit A-record mapping of the PaaS FQDN to the Private Endpoint IP
-
-This misalignment was the **initial confirmed blocker** in the incident.
+Once DNS was fixed:
+- Name resolution succeeded
+- Traffic reached the Private Endpoint
+- A second, deeper issue surfaced — confirming DNS was only the **first blocker**
 
 ---
 
-## Load Balancer Misconfiguration — Root Cause
+## Final Root Cause — Load Balancer Configuration
 
-![Load Balancer](../../../resources/slides/pls/loadbalancer.png)
+With DNS resolved, traffic successfully traversed:
 
-After DNS resolution was corrected, connectivity still failed.
+- On-premises → VPN
+- Hub VNet → Private Endpoint
+- Microsoft backbone → Provider tenant
 
-Root cause analysis confirmed:
+The remaining failure was isolated to the **provider-side Load Balancer**:
 
-- The backend VM hosts the **SQL service**
-- Traffic successfully reached the Private Link Service
-- The **Azure Load Balancer was configured with a NAT rule instead of a Load Balancing rule**
-- This prevented correct backend service distribution
+- Backend SQL service was hosted on a VM behind a Standard Load Balancer
+- A **NAT rule** was configured instead of a **Load Balancing rule**
+- This prevented correct traffic distribution behind the Private Link Service
 
-Correcting the Load Balancer rule immediately restored **end-to-end connectivity**.
-
----
-
-## Key Lessons Learned
-
-- Private Link incidents are frequently **DNS-related first**
-- A functional Private Endpoint does **not guarantee backend reachability**
-- Load Balancer rule selection (NAT vs LB) is a **critical dependency**
-- Production-accurate lab replication is an effective escalation-breaking technique
+Once corrected, end-to-end Private Link connectivity succeeded.
 
 ---
 
-## Outcome
+## Key Takeaways
 
-This project demonstrates:
+- Private Link failures are frequently **DNS-first problems**
+- Connectivity does not equal reachability
+- Load Balancer rule types are **critical** behind Private Link Service
+- Building a faithful lab can resolve incidents faster than vendor escalation
 
-- Structured fault-domain isolation
-- Hybrid DNS troubleshooting under enterprise constraints
-- Deep understanding of Azure Private Link and Load Balancer behavior
-- Real-world incident resolution methodology suitable for production environments
+---
+
+## Why This Project Matters
+
+This PoC demonstrates:
+
+- Real-world Azure Private Link troubleshooting
+- Hybrid DNS design and split-horizon resolution
+- Tenant-to-tenant fault isolation under production pressure
+- Engineering-led incident resolution backed by evidence
