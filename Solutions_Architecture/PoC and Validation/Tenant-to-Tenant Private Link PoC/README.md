@@ -1,142 +1,218 @@
 # Azure Hybrid Networking & Private Service Projection  
-## Tenant-to-Tenant Private Link — Business-Critical Incident Resolution
+### Tenant-to-Tenant Private Link — Business-Critical Incident Resolution
 
 ---
 
 ## Overview
 
-This project documents a **business-critical tenant-to-tenant Azure Private Link incident**
-impacting a high-value customer, where every minute of downtime resulted in direct
-financial and operational loss.
+This project documents a **business-critical tenant-to-tenant Azure Private Link incident** affecting a high-value enterprise customer, where **every minute of service disruption resulted in direct financial and operational impact**.
 
-The service provider initially attributed the outage to the consumer environment
-(routing, DNS, or firewalls).  
-To break escalation deadlock — including live troubleshooting calls with Microsoft —
-a **production-accurate reference lab** was deployed to isolate fault domains.
+Initial escalation placed responsibility on the **consumer environment** (routing, DNS, firewalls).  
+To break the escalation deadlock — including **live troubleshooting calls with Microsoft** — a **production-accurate reference lab** was deployed to isolate fault domains end-to-end.
+
+### Outcome
 
 This lab conclusively demonstrated:
 
-- DNS was the **initial blocker**
-- After DNS resolution was corrected, traffic still failed
-- The **final root cause** was a misconfigured **Private Link Service / Load Balancer**
-  in the provider tenant
+- **DNS was the initial blocker**
+- After DNS was resolved, the **final blocker was the supplier’s Private Link Service / Load Balancer configuration**
+- The consumer tenant, routing, VPN, and firewalls were **not at fault**
 
 ---
 
-## Complete Architecture
+## High-Level Architecture
 
-![Complete Architecture](resources/slides/pls/complete-architecture.png)
+![High-Level Architecture](../../../resources/slides/pls/pls.png)
 
-This diagram represents the **end-to-end traffic path**:
+This architecture demonstrates **secure, private service projection** across:
+- On-premises infrastructure
+- A consumer Azure hub (North Europe)
+- A provider Azure service environment (West Europe)
 
-- On-premises clients
-- Hybrid IPsec VPN to Azure Hub (North Europe)
-- Private Endpoint termination
-- Microsoft backbone traversal
-- Provider Private Link Service
-- Standard Load Balancer
-- Backend workload (SQL / VM)
+All service traffic remains on the **Microsoft backbone network**.
 
 ---
 
-## Cross-Region Private Link Connectivity
+## Secure Cross-Region Consumption Model
 
-![Cross-Region Connection](resources/slides/pls/cross-region.png)
+![Cross-Region Scenario](../../../resources/slides/pls/dual.png)
 
-Key characteristics:
+The design separates responsibility across **three clear fault domains**:
 
-- No VNet peering
-- No address overlap exposure
-- Traffic remains entirely on the **Microsoft backbone**
-- Consumer only sees a **local RFC1918 IP**
+- **Provider (West Europe)** — service ownership
+- **Consumer (North Europe)** — service consumption
+- **Hybrid Bridge (On-Premises)** — enterprise entry point
 
----
-
-## Publishing the Provider Service
-
-![Publishing the Service](resources/slides/pls/publishing-service.png)
-
-The provider environment exposes the workload via:
-
-- Standard Azure Load Balancer
-- Private Link Service
-- Subscription-level visibility controls
-
-At this stage, connectivity still failed — proving the issue was **not** routing,
-VPN, or firewall related.
+This separation was critical in proving where responsibility truly lay.
 
 ---
 
-## DNS Resolution — Azure Side
+## Consumer Hub — Network Foundation (North Europe)
 
-![Azure Private DNS](resources/slides/pls/private-dns.png)
+![Consumer Hub](../../../resources/slides/pls/consumer-hub.png)
 
-Azure Private DNS zones were correctly created for the Private Endpoint namespace.
-However, **Azure Private DNS is not authoritative outside Azure**.
+The consumer hub (`vnet-hub`) provides:
 
-This led to the initial outage condition.
-
----
-
-## DNS Resolution — On-Premises (Split-Horizon)
-
-![On-Prem DNS](resources/slides/pls/on-premdns.png)
-
-### The Challenge
-On-premises DNS servers **cannot resolve Azure Private DNS zones**.
-
-### The Solution
-A split-horizon approach was implemented using:
-
-- Manual forward lookup zones  
-- Conditional forwarding (where applicable)  
-- Static A-record mapping  
-
-The service FQDN was explicitly mapped to the Private Endpoint IP.
+- Dedicated **GatewaySubnet**
+- Dedicated **Private Endpoint subnet**
+- Enterprise-aligned DNS
+- Centralized ingress for hybrid users and workloads
 
 ---
 
-## Custom DNS Zone (On-Prem Validation)
+## Hybrid Connectivity Bridge (On-Premises → Azure)
 
-![Custom DNS Zone](resources/slides/pls/customdnszone.png)
+![Hybrid Bridge](../../../resources/slides/pls/bridge.png)
 
-This confirmed:
+An **IPsec IKEv2 VPN** extends the on-premises environment into Azure, enabling:
 
-- Correct name resolution to the Private Endpoint IP
-- Successful DNS traversal across the hybrid boundary
-- DNS was **no longer the blocking factor**
+- Real enterprise DNS resolution paths
+- Real client traffic validation
+- Elimination of synthetic testing assumptions
+
+This ensured the issue could not be dismissed as “lab-only”.
 
 ---
 
-## Root Cause Analysis
+## Provider Environment — Service Isolation (West Europe)
 
-### Initial Blocker — DNS
-- Private DNS zones existed but were not reachable by enterprise DNS
-- Name resolution failed for `privatelink.*` records
+![Provider Workload](../../../resources/slides/pls/workload.png)
 
-### Final Blocker — Private Link Service / Load Balancer
-- After DNS resolution was corrected, traffic still failed
-- The issue was isolated to the **provider tenant**
-- Misconfiguration within the Private Link Service / Load Balancer prevented service access
+The provider tenant hosts:
+
+- An isolated workload VNet
+- No VNet peering to the consumer
+- No address overlap
+- A backend service (SQL / VM workload)
+
+Access is **only possible via Private Link**.
+
+---
+
+## Traffic Distribution & Load Balancing
+
+![Load Balancer & PLS](../../../resources/slides/pls/loadbalancer.png)
+
+A **Standard Azure Load Balancer** fronts the provider workload and is referenced by the **Private Link Service**.
+
+At this stage:
+- VPN ✔️
+- Routing ✔️
+- Firewalls ✔️
+- DNS ✔️  
+❌ **Traffic still failed**
+
+This was the first hard indicator the issue was **provider-side**.
+
+---
+
+## Projecting the Service — Private Link Service
+
+![Private Link Flow](../../../resources/slides/pls/private-int.png)
+
+The Private Link Service:
+
+- Wraps the Load Balancer frontend
+- Abstracts provider IP space
+- Requires **correct frontend, NAT, and visibility configuration**
+- Requires explicit approval of consumer endpoints
+
+This component was later confirmed to be **misconfigured in the supplier tenant**.
+
+---
+
+## Root Cause Analysis — DNS (Initial Blocker)
+
+### The DNS Puzzle: On-Premises Resolution
+
+![On-Prem DNS](../../../resources/slides/pls/on-premdns.png)
+
+**Problem:**
+- On-premises DNS servers cannot see Azure Private DNS zones
+
+**Impact:**
+- `privatelink.*` records failed to resolve
+- Traffic never reached the Microsoft backbone
+
+---
+
+### DNS Resolution Strategy (Manual & Conditional)
+
+![Custom DNS Zone](../../../resources/slides/pls/customdnszone.png)
+
+**Resolution implemented in the lab:**
+
+- Manual forward lookup zones / conditional forwarders
+- Explicit `A` record mapping of:
+  - Private Endpoint FQDN → Private IP (e.g. `172.16.3.5`)
+- Enterprise DNS remained authoritative
+
+This immediately restored **name resolution and connectivity**.
+
+---
+
+## Root Cause Analysis — Final Blocker (Supplier)
+
+Once DNS was corrected:
+
+- Traffic reached the Private Endpoint
+- Traversed the Microsoft backbone
+- Reached the provider tenant  
+❌ **But failed at the service boundary**
+
+This conclusively isolated the fault to:
+
+> **Private Link Service / Load Balancer misconfiguration in the supplier tenant**
+
+---
+
+## Complete End-to-End Architecture (Final)
+
+![Complete Architecture](../../../resources/slides/pls/project-pls.png)
+
+This diagram represents the **validated, working design** including:
+
+- On-premises DNS
+- Azure Private Endpoint
+- Cross-region Private Link
+- Provider Load Balancer & service
+
+---
+
+## Why This PoC Is Valid
+
+This is **not a synthetic demo**.
+
+- Real DNS
+- Real VPN
+- Real enterprise resolution paths
+- Real Private Link behavior
+- Real failure reproduction
+
+The lab was used to:
+- Prove consumer innocence
+- Break escalation deadlock
+- Drive supplier remediation
 
 ---
 
 ## Key Takeaways
 
-- Private DNS Zones are **optional**, not mandatory
-- Private Endpoints function as long as FQDN → IP resolution is correct
-- DNS resolution success does **not** guarantee Private Link Service correctness
-- A consumer-side lab is an effective way to prove provider-side faults
+- Private Link **does not remove DNS responsibility**
+- On-prem DNS must explicitly resolve `privatelink.*`
+- Private Endpoint IPs *can* be manually mapped
+- Private Link Services are fragile if misconfigured
+- Clear fault-domain separation wins escalations
 
 ---
 
-## Why This PoC Matters
+## Status
 
-This project demonstrates **real-world Azure troubleshooting**:
+✅ **Issue reproduced**  
+✅ **Root cause isolated**  
+✅ **Supplier misconfiguration confirmed**  
+✅ **Production guidance validated**
 
-- Multi-tenant isolation
-- Hybrid DNS realities
-- Escalation-grade fault isolation
-- Evidence-based root cause analysis
+---
 
-This is not a theoretical design — it is a **validated incident resolution model**.
+*This project is part of the Enterprise Architecture Portfolio and represents real-world incident engineering, not theoretical design.*
