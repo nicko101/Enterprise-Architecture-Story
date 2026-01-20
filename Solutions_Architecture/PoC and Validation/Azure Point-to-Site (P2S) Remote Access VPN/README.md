@@ -5,6 +5,8 @@ This project documents the deployment of a hybrid cloud network infrastructure i
 
 Additionally, the architecture supports **Point-to-Site (P2S)** connectivity, enabling remote clients to connect securely via OpenVPN using certificate-based authentication.
 
+* **Project Presentation**: [Download/View Technical Slide Deck](../../../resources/slidedecks/Azure_Hybrid_Connectivity_and_Trusted_Compute_Deployment.pdf)
+
 ---
 
 ## Core Network Architecture
@@ -21,7 +23,7 @@ The foundation of the deployment is a centralized Hub Virtual Network (VNet) des
 * **Public IP (nf-gwip)**: `52.166.77.218`
 * **SKU**: Standard (Static Allocation)
 
-
+[Image of an Azure Virtual Network architecture with a GatewaySubnet and a default subnet]
 
 ---
 
@@ -45,7 +47,7 @@ BGP facilitates dynamic routing, ensuring that cloud and on-premises environment
 | **ASN** | 65515 | 65010 |
 | **Peering IP** | 172.16.1.30 | 10.0.0.1 |
 
-
+[Image of BGP peering between Azure VPN Gateway and on-premises router]
 
 ---
 
@@ -64,21 +66,3 @@ A Linux workload was provisioned to validate cross-premises connectivity.
 
 ### VM Specifications (nf-vm1)
 * **OS**: Ubuntu 24.04 LTS (Trusted Launch / Secure Boot enabled)
-* **Size**: `Standard_DS1_v2`
-* **Network**: Accelerated Networking enabled on `nf-vm1555` interface.
-
-### Security Posture
-* **Network Security Group**: Restricts inbound traffic, allowing only SSH (TCP/22).
-* **Identity**: Currently allows password-based authentication (`disablePasswordAuthentication: false`). 
-* **Recommendation**: Transition to SSH Key-based authentication to align with modern security standards.
-
----
-
-## Governance & Metadata
-All resources are tagged for ownership and lifecycle management:
-* **Creator**: Nick Fennell
-* **Creation Dates**: July 22–24, 2025
-* **Region**: westeurope
-
----
-[Return to Modernisation Overview](../README.md) | [Return to Root](../../../README.md)
