@@ -1,19 +1,19 @@
 # Azure Hybrid Networking & Private Service Projection  
-**Tenant-to-Tenant Private Link – Incident Resolution**
+**Tenant-to-Tenant Private Link – Business-Critical Incident Resolution**
 
 ---
 
 ## Overview
 
-This repository documents a **business-critical tenant-to-tenant Azure Private Link incident** affecting a high-value customer, where service downtime resulted in **direct financial and operational impact**.
+This repository documents a **business-critical tenant-to-tenant Azure Private Link incident** impacting a high-value customer, where **every minute of downtime resulted in direct financial and operational cost**.
 
-The supplier initially attributed the failure to the consumer network (routing, firewalls, Palo Alto).  
-To break escalation deadlock and prove correctness, a **production-accurate reference lab** was deployed.
+The supplier initially attributed the issue to the consumer environment (routing, DNS, firewalls).  
+To break escalation deadlock — including multiple Microsoft support calls — a **production-accurate reference lab** was deployed to isolate the fault domains.
 
-The lab conclusively demonstrated:
+This lab conclusively demonstrated:
 
-1. **DNS was the first blocking layer**
-2. Once DNS was fixed, the **final blocker was the supplier’s Private Link Service / Load Balancer configuration**
+1. **DNS was the initial blocker**
+2. After DNS was resolved, the **final blocker was the supplier’s Private Link Service / Load Balancer configuration**
 
 ---
 
@@ -21,19 +21,23 @@ The lab conclusively demonstrated:
 
 ![Azure Hybrid Networking & Private Service Projection](resources/slides/pls/pls.png)
 
+This architecture demonstrates secure, private service consumption across **tenants and regions**, using Azure Private Link over the Microsoft backbone — with no public internet exposure.
+
 ---
 
 ## Dual-Environment Topology
 
 ![Dual Environment Topology](resources/slides/pls/dual.png)
 
-### Consumer (North Europe)
-- Hybrid hub network
-- Enterprise/on-prem DNS integration
+The design is intentionally split to allow clean fault isolation.
+
+### Consumer Hub (North Europe)
+- Hybrid connectivity entry point
+- Enterprise DNS integration
 - Private Endpoint consumer
 
-### Provider (West Europe)
-- Isolated VNet
+### Provider Service (West Europe)
+- Isolated application VNet
 - Load-balanced backend service
 - Private Link Service projection
 
@@ -43,17 +47,36 @@ The lab conclusively demonstrated:
 
 ![Consumer Hub Network Foundation](resources/slides/pls/consumer-hub.png)
 
+The consumer hub (`vnet-hub`) provides:
+
+- Dedicated `GatewaySubnet`
+- VM subnet for consumer workloads
+- Dedicated Private Endpoint subnet
+- Custom DNS servers aligned with on-premises resolution
+
+This ensured the lab matched **real production DNS behavior**, not Azure-only defaults.
+
 ---
 
-## Hybrid Connectivity (On-Prem → Azure)
+## Hybrid Connectivity Bridge
 
 ![Hybrid Connectivity Bridge](resources/slides/pls/bridge.png)
 
+The North Europe hub extends the on-premises network into Azure via an **IPsec IKEv2 VPN**, enabling:
+
+- Real client traffic paths
+- Enterprise DNS forwarding chains
+- Accurate validation of Private Endpoint access
+
+This removed all ambiguity around routing and firewall responsibility.
+
 ---
 
-## Provider Environment – Service Isolation
+## Secure Management & Consumer Workloads
 
-![Provider Environment](resources/slides/pls/workload.png)
+![Secure Management & Consumer Workloads](resources/slides/pls/workload.png)
+
+Consumer workloads are accessed securely using Azure Bastion, avoiding direct exposure of management ports while maintaining operational access during troubleshooting.
 
 ---
 
@@ -61,79 +84,8 @@ The lab conclusively demonstrated:
 
 ![Traffic Distribution & Load Balancing](resources/slides/pls/loadbalancer.png)
 
----
+A **Standard Azure Load Balancer** fronts the provider workload and is referenced by the Private Link Service.
 
-## Service Projection – Private Link Service
-
-![Private Link Service Projection](resources/slides/pls/project-pls.png)
-
----
-
-## Private Endpoint Integration (Consumer Side)
-
-![Private Endpoint Integration](resources/slides/pls/private-int.png)
-
----
-
-## Root Cause Analysis
-
-### Initial Blocker — DNS
-
-![Private DNS Resolution](resources/slides/pls/private-dns.png)
-
-**Issue**
-- Private DNS zones existed but were not correctly connected
-- Enterprise DNS forwarders could not resolve `privatelink.*` zones
-- Name resolution did not traverse the Microsoft backbone
-
-**Resolution**
-- Manually created required Microsoft Private DNS zones
-- Corrected on-prem → Azure → Private DNS forwarding paths
-
----
-
-### Final Blocker — Private Link Service / Load Balancer
-
-Once DNS was resolved, traffic still failed.
-
-This proved:
-- Consumer routing was correct
+At this stage, **connectivity was still failing**, even though:
+- Routing was correct
 - Firewalls were not blocking traffic
-- Private Endpoint connectivity was functional
-
-The fault was isolated to the **supplier’s Private Link Service / Load Balancer configuration**, which was corrected.
-
----
-
-## Resource Bill of Materials
-
-![Resource Bill of Materials](resources/slides/pls/resources.png)
-
----
-
-## Architectural Summary
-
-![Architectural Summary](resources/slides/pls/cross-summary.png)
-
----
-
-## Key Outcomes
-
-- Consumer network fully exonerated
-- DNS identified as the **initial blocker**
-- Provider PLS / Load Balancer identified as the **final root cause**
-- Supplier corrected configuration
-- Business-critical service restored
-
----
-
-## Why This Matters
-
-This lab demonstrates:
-
-- Tenant-to-tenant Private Link at production scale
-- Correct DNS split-horizon design
-- Microsoft backbone service consumption
-- Structured fault isolation under pressure
-
-This design replicated the **exact production failure mode**.
