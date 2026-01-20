@@ -3,6 +3,9 @@
 ## Executive Summary
 This project documents the deployment of a hybrid cloud network infrastructure in the **westeurope** region using Azure Resource Manager (ARM). The primary objective is to establish a secure, dynamic **Site-to-Site (S2S) VPN** connection leveraging **Border Gateway Protocol (BGP)** for automated route exchange.
 
+![Architectural Deliverables](../../../resources/slides/p2s/deliver.png)
+*Figure 1: High-level overview of the architectural capabilities, including BGP-enabled IPsec, OpenVPN remote access, and secure compute.*
+
 Additionally, the architecture supports **Point-to-Site (P2S)** connectivity, enabling remote clients to connect securely via OpenVPN using certificate-based authentication.
 
 * **Project Presentation**: [Download/View Technical Slide Deck](../../../resources/slidedecks/Azure_Hybrid_Connectivity_and_Trusted_Compute_Deployment.pdf)
@@ -28,11 +31,6 @@ The foundation of the deployment is a centralized Hub Virtual Network (VNet) des
 ## Site-to-Site (S2S) VPN Connectivity
 The S2S tunnel provides a robust IPsec bridge between Azure and the on-premises network.
 
-### Gateway Specifications
-* **Name**: `ng-vpngw`
-* **SKU**: `VpnGw1` (Generation 1, Route-Based)
-* **BGP**: Enabled
-
 ### BGP Configuration Summary
 BGP facilitates dynamic routing, ensuring that cloud and on-premises environments are aware of each other's network changes without manual route updates.
 
@@ -47,12 +45,11 @@ BGP facilitates dynamic routing, ensuring that cloud and on-premises environment
 The VPN Gateway is configured to provide secure remote access for individual administrative clients via the OpenVPN protocol.
 
 ![P2S VPN Configuration](../../../resources/slides/p2s/p2s.png)
-*Figure 1: Engineering view of the Point-to-Site configuration, including client address pools and certificate-based authentication.*
+*Figure 2: Engineering view of the Point-to-Site configuration, including client address pools and certificate-based authentication.*
 
 * **Client Address Pool**: `10.1.1.0/24`
 * **Protocol**: OpenVPN
 * **Authentication**: Certificate-based (Root Certificate embedded in ARM template)
-* **Encryption**: TLS-based security for remote engineering tasks.
 
 ---
 
@@ -61,18 +58,12 @@ A Linux workload was provisioned to validate cross-premises connectivity.
 
 ### VM Specifications (nf-vm1)
 * **OS**: Ubuntu 24.04 LTS (Trusted Launch / Secure Boot enabled)
-* **Size**: `Standard_DS1_v2`
 * **Network**: Accelerated Networking enabled on `nf-vm1555` interface.
-
-### Security Posture
-* **Network Security Group**: Restricts inbound traffic, allowing only SSH (TCP/22).
-* **Identity**: Currently allows password-based authentication (`disablePasswordAuthentication: false`). 
-* **Recommendation**: Transition to SSH Key-based authentication to align with modern security standards.
+* **Security Posture**: Inbound SSH (TCP/22) permitted via NSG.
 
 ---
 
 ## Governance & Metadata
-All resources are tagged for ownership and lifecycle management:
 * **Creator**: Nick Fennell
 * **Creation Dates**: July 22–24, 2025
 * **Region**: westeurope
