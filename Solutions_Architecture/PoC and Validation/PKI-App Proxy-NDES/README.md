@@ -1,10 +1,9 @@
-
 # PoC: Secure NDES/SCEP via Azure App Proxy
 
 ## Project Artifacts
-The following technical resources document the design, validation, and executive briefing for this modernization project:
+The following resources document the design, validation, and executive briefing for this modernization project:
 * **Technical Slide Deck**: [Cloud PKI & Intune Deployment Briefing (PDF)](../../../resources/slidedecks/Cloud_PKI_Intune_Deployment.pdf)
-* **Modern PKI Diagram**: [Architecture Flow](#modern-pki-architecture)
+* **Architecture Mapping**: [Modern PKI Flow Visual](#modern-pki-architecture)
 * **Deployment Checklist**: [Engineering Validation Checklist](#deployment-checklist-and-validation)
 
 ---
@@ -20,8 +19,6 @@ The following diagram illustrates the transition from legacy, internet-exposed N
 [![Modern PKI Architecture](https://raw.githubusercontent.com/nicko101/Enterprise-Architecture-Portfolio/main/resources/images/Cloud%20PKI%20Intune%20Deployment-modern-pki.png)](https://raw.githubusercontent.com/nicko101/Enterprise-Architecture-Portfolio/main/resources/images/Cloud%20PKI%20Intune%20Deployment-modern-pki.png)
 *Figure 1: High-level architectural flow of Intune SCEP requests through the Azure Application Proxy.*
 
-
-
 ---
 
 ## Technical Strategy
@@ -30,7 +27,7 @@ The goal of this deployment is to allow Microsoft Intune to deliver SCEP profile
 ### Key Components
 * **Azure App Proxy Connector**: Installed on-premises to establish an authenticated outbound tunnel to Azure.
 * **External URL**: Provides a secure endpoint for Intune to communicate with the SCEP service.
-* **Passthrough Pre-authentication**: Required for the SCEP protocol to allow direct communication with the NDES service while maintaining the proxy's security benefits.
+* **Pre-authentication**: Leverages Microsoft Entra ID to ensure only authorized traffic reaches the NDES server.
 
 ---
 
@@ -42,11 +39,19 @@ The engineering checklist below was used to validate the end-to-end configuratio
 
 ---
 
+## Operational Proof: Intune SCEP Confirmation
+Success is verified through the successful deployment of the SCEP certificate profile to endpoints. The following capture from the Intune portal confirms the device state and certificate delivery success via the App Proxy endpoint.
+
+![Intune SCEP Confirmation](../../../resources/slides/SCEP.png)
+*Figure 3: Intune Portal confirmation showing successful SCEP profile deployment and device compliance.*
+
+---
+
 ## Engineering Highlights
 
 ### Security Posture
 * **Outbound-Only Connectivity**: By using the App Proxy connector, the corporate firewall requires zero inbound port openings (80/443), significantly reducing the attack surface.
-* **Attack Surface Reduction**: The NDES server is no longer placed in a DMZ, keeping the PKI infrastructure entirely within the internal security zone.
+* **Identity-Aware Access**: Access to the NDES URL is governed by Entra ID, adding a layer of identity validation before the request ever touches the internal network.
 
 ### SCEP Enrollment Flow
 1. **Intune Policy**: Managed device receives the SCEP configuration profile.
