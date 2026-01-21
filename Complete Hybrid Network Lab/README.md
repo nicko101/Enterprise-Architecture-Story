@@ -1,42 +1,63 @@
 # Technical Implementation: Complete Hybrid Network Lab
 
-## Lab Overview
-This directory serves as the technical "As-Built" documentation for the implementation of this hybrid environment. It captures the configuration logic and security policies required to maintain a functional security fabric across on-premises and cloud-native services.
+## Executive Summary
+This directory serves as the definitive "As-Built" documentation for a production-grade hybrid engineering environment. The lab simulates a full-stack enterprise modernization journey, bridging on-premises legacy infrastructure with cloud-native Azure services. 
 
-[![Anatomy of a Hybrid Security Lab](../resources/slides/anatomy.png)](../resources/slides/anatomy.png)
-*Figure 1: Anatomy of the Hybrid Lab — hardware utilization, virtualized network core, and security orchestration.*
+The environment is designed to validate a Zero-Trust security posture, focusing on certificate-based identity, dynamic routing, and automated endpoint governance across a multi-vendor ecosystem.
 
 ---
 
-## Technical Architecture Components
+## Architectural Pillars
 
-### Compute and Virtualization
-* **Proxmox Virtual Environment**: Serving as the primary type-1 hypervisor hosting the enterprise infrastructure.
-* **Resource Management**: Active monitoring of compute resources, with the primary host utilizing over 32 GB of RAM for lab operations.
+### 1. Networking and Perimeter Security
+The network core is built on a multi-vendor fabric designed for high availability and granular traffic control.
+* **Core Routing**: A virtualized Cisco core handles enterprise-grade routing protocols and site-to-site connectivity.
+* **Edge Enforcement**: Aruba AOS-CX switching provides the physical and virtual edge, facilitating 802.1X and MAC-Authentication.
+* **Perimeter Defense**: Palo Alto VM-Series Firewalls act as the primary security boundary and central routing authority, managing extensive sub-interface segmentation and enforcing protection against external threats.
 
-### Network and Perimeter Security
-* **Virtualized Core**: A Cisco-based network core built on GNS3 to simulate enterprise routing environments.
-* **Perimeter Defense**: Palo Alto Firewalls providing active threat inspection and protection against TCP flood attacks from untrusted zones.
 
-### Identity and Access Governance
-* **Cloud-Native Identity**: Centralized identity management utilizing Microsoft Azure and SAML for Single Sign-On (SSO).
-* **Device Compliance**: Integration of Microsoft Intune via Graph API to enforce network access policies based on device health.
-* **Automated Trust**: Utilization of SCEP profiles to automatically push certificates from a local authority to managed endpoints.
+
+### 2. Identity and Access Governance
+The identity fabric integrates legacy directory services with modern cloud control planes to ensure "explicit verification" for all users and devices.
+* **Hybrid Identity Bridge**: Bidirectional synchronization between local Active Directory and Microsoft Entra ID.
+* **NAC Orchestration**: Aruba ClearPass (CPPM) serves as the central policy engine, performing real-time posture checks via Microsoft Intune integration.
+* **Modernized Enrollment**: Implementation of NDES and SCEP via Azure App Proxy allows secure, internet-based certificate delivery to managed endpoints without exposing internal PKI roles.
+
+### 3. Compute and Resource Management
+* **Hypervisor Foundation**: Proxmox Virtual Environment provides the Type-1 hypervisor foundation, hosting redundant domain controllers, security appliances, and Linux workloads.
+* **Operational Stability**: The environment is tuned for high-density operation, utilizing over 32 GB of RAM to sustain concurrent security, identity, and routing services.
+
+---
+
+## Operational Capabilities
+
+### Dynamic Hybrid Routing
+The lab utilizes BGP (Border Gateway Protocol) to automate route exchange between the on-premises security boundary and the Azure VPN Gateway. This ensures that cloud and on-premises environments maintain synchronized routing tables without manual intervention.
+
+
+
+### Certificate-Based Security
+Trust is established through a multi-tier PKI hierarchy. Every managed device is issued a unique identity certificate, which is used for:
+* **EAP-TLS Authentication**: Secure network access for wired and wireless clients.
+* **GlobalProtect VPN**: Certificate-based pre-logon and user authentication for remote access.
+* **Service Identity**: Encrypted communication between internal infrastructure components.
 
 ---
 
 ## Lab Exploration Guide
 
-### Infrastructure
-* [Active Directory](./Infrastructure/Active%20Directory): Local identity and group policy management.
-* [Certificate-Services](./Infrastructure/Certificate-Services): PKI hierarchy and NDES/SCEP configuration.
+### Infrastructure & Platform
+* **[Active Directory](./Infrastructure/Active-Directory/)**: Local identity and group policy management.
+* **[Certificate-Services](./Infrastructure/Certificate-Services/PKI/)**: PKI hierarchy, NDES, and SCEP architecture.
+* **[Virtualization](./Infrastructure/Virtualization/)**: Proxmox host configuration and virtual machine management.
 
-### Networking
-### Routing
-* [Routing](./Routing): Edge and cloud routing including BGP, VLAN segmentation, Azure VPN Gateway, and Virtual WAN.
-
-### Security
-* [Network Access Control](./Security/identity-governance/network-access-control): Aruba ClearPass policy logic and service orchestration.
+### Networking & Security
+* **[Routing](./Networking/Routing/)**: Edge and cloud routing, BGP peering, and Virtual WAN.
+* **[Network Access Control](./Security/Network-Access-Control/)**: Aruba ClearPass policy logic and Intune integration.
+* **[Firewall Governance](./Security/Firewall/)**: Palo Alto security profiles, zone protection, and SSL decryption.
 
 ---
+**Author**: Nick Fennell
+**Focus**: Hybrid Connectivity, Zero-Trust Identity, and Network Security Engineering.
+
 [Return to Root README](../README.md)
