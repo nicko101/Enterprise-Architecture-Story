@@ -1,57 +1,59 @@
-# Solutions Architecture: Hybrid Zero Trust Environment
+# Solutions Architecture: Integration and Modernization Patterns
 
-## Purpose
-This section documents the architectural design and composition of the hybrid Zero Trust environment. It focuses on how identity, trust, networking, and security components are assembled into a coherent system, and why specific architectural decisions were made.
+## Overview
+This directory documents the technical journey of integrating multi-vendor platforms and migrating legacy components into a modernized, cloud-native security fabric. The primary purpose of this folder is to capture the engineering logic behind complex migrations and Proof of Concept (PoC) validations.
 
-**Project Status:** Active engineering build. Architectural designs and content are updated as new modules are validated and integrated.
+The projects herein demonstrate the transition from perimeter-based trust to a **Zero Trust Network Access (ZTNA)** framework, where identity, device health, and secure ingress patterns are verified continuously.
 
----
 
-## High-Level Architecture Context
-
-[![Full Stack Solutions Overview](https://raw.githubusercontent.com/nicko101/Enterprise-Architecture-Portfolio/main/resources/slides/fullstack.png)](https://raw.githubusercontent.com/nicko101/Enterprise-Architecture-Portfolio/main/resources/slides/fullstack.png)
-*Figure 1: High-level solution architecture detailing the relationship between identity providers, enforcement points, and hybrid cloud resources.*
-
-This view establishes the technical foundation. Logical, physical, and trust-flow diagrams are provided within the relevant sub-sections below to demonstrate operational detail.
 
 ---
 
-## Architecture Domains
-
-### Identity and Trust Plane
-Identity is treated as the primary control plane for access decisions.
-* **Active Directory**: Provides authoritative identity for on-premises services.
-* **Microsoft Entra ID**: Acts as the cloud identity and policy enforcement layer.
-* **Multi-tier PKI**: Enables device and service trust through automated certificate lifecycle management.
-
-### Access and Enforcement Plane
-Access enforcement is context-aware rather than network-location-based.
-* **Identity Validation**: Network access is granted only after successful posture validation.
-* **Aruba ClearPass**: Enforces Network Access Control (NAC) decisions.
-* **Microsoft Intune**: Provides real-time device compliance signals.
-
-### Connectivity and Routing Plane
-Hybrid connectivity is designed to mimic an enterprise WAN architecture.
-* **Secure Tunneling**: Site-to-site IPsec connectivity utilizing IKEv2.
-* **Routing Strategy**: Implementation of predictable traffic flow between local and cloud resources.
+## 1. Integration-Security-and-Operations
+This section focuses on the "Unified Security Fabric"—the operational orchestration that allows disparate systems to function as a single security entity.
+* **Security Orchestration**: Documenting the interaction between Palo Alto firewalls, Proxmox hypervisors, and Aruba ClearPass.
+* **Operational Visibility**: Establishing a cohesive flow where traffic logs are enriched with identity data, providing granular visibility across the hybrid boundary.
 
 ---
 
-## Design Principles
-* **Identity First**: Network location does not imply trust.
-* **Least Privilege**: Access is explicitly granted based on role, not implied by connection.
-* **Separation of Concerns**: Identity, access, routing, and enforcement are distinct logical layers.
+## 2. Migration-Cloud-Modernisation
+This suite documents the architectural shift of legacy on-premises roles into Azure-native frameworks to reduce attack surfaces and improve scalability.
+
+### Secure SCEP Delivery via Azure App Proxy
+A primary modernization project within this folder is the migration of the **Network Device Enrollment Service (NDES)** for secure SCEP certificate retrieval.
+* **The Migration**: Transitioning the SCEP endpoint behind an **Azure Application Proxy**.
+* **Modernization Goal**: Providing a secure, internet-facing path for Intune-managed devices to retrieve identity certificates with **zero inbound firewall openings** to the internal Issuing CA.
+
+
 
 ---
 
-## Solutions Navigation
-These links point to the active sub-folders within the architecture domain.
+## 3. PoC and Validation
+The PoC folder contains the technical "handshakes" and API validations required to prove the functionality of complex, multi-vendor integrations.
 
-| Section | Focus |
-| :--- | :--- |
-| [Integration-Security-and-Operations](./Integration-Security-and-Operations/) | Multi-vendor orchestration and operational visibility. |
-| [Migration-Cloud-Modernisation](./Migration-Cloud-Modernisation/) | Strategy for transitioning legacy workloads to hybrid cloud. |
-| [PoC and Validation](./PoC%20and%20Validation/) | Engineering tests, routing verification, and protocol analysis. |
+### Aruba ClearPass Microsoft Intune Extension
+A critical validation documented here is the integration of on-premises **Aruba ClearPass with Microsoft Azure and Intune**.
+* **Intune Extension Integration**: Documentation of the API link between the ClearPass Policy Manager and the Microsoft Graph API.
+* **Compliance-Based Admission**: Validating the ingestion of Intune-specific attributes (e.g., `isCompliant`, `isManaged`) to perform real-time posture checks. 
+* **The Outcome**: Ensuring that network admission is governed by a verified "Healthy" state from the cloud management plane before any traffic is permitted.
+
+
 
 ---
+
+## Integration Pillars
+* **Hybrid Cloud Fabric**: Enabling seamless identity and data flow between on-premises virtualization and Microsoft Azure resources.
+* **Identity and Access Management (IAM)**: Leveraging Aruba ClearPass as the central orchestration point for all network admission requests.
+* **Endpoint Compliance**: Real-time health polling via the **Intune Extension** to ensure only compliant devices reach sensitive internal segments.
+* **Network Security**: Palo Alto Next-Gen Firewalls providing granular visibility and enforcement across the entire stack.
+
+---
+
+## Navigation
+* **[Integration-Security-and-Operations](./Integration-Security-and-Operations/)**
+* **[Migration-Cloud-Modernisation](./Migration-Cloud-Modernisation/)**
+* **[PoC and Validation](./PoC%20and%20Validation/)**
+
+**Focus**: Solutions Architecture, Hybrid Modernization, and Zero Trust Engineering.
+
 [Return to Root README](../README.md)
