@@ -1,56 +1,49 @@
-# PoC: Migrating to Azure Internal Load Balancer (ILB) for NVA High Availability
+# Azure Network Architecture: Secure Hub-and-Spoke with Palo Alto NVA
 
-## Overview
-This Proof of Concept (PoC) documents the architectural transition from pointing User Defined Routes (UDRs) directly at a Palo Alto NVA interface to utilizing an **Azure Internal Load Balancer (ILB)** as the next hop. 
-
-The primary goal of this design is to enable a "Load Balancer Sandwich," allowing for seamless failover between firewall nodes and providing a single, resilient Virtual IP (VIP) for internal traffic.
+## Executive Summary
+This architecture defines a high-availability **Hub-and-Spoke** topology in **West Europe**. It centralizes security via a **Palo Alto Networks NVA**, providing a single point of inspection for all ingress, egress, and east-west traffic.
 
 ---
 
-## Architectural Evolution
+## I. Network Infrastructure
+The deployment utilizes a Hub VNet for shared services and a Spoke VNet for application workloads, integrated via VNet Peering with Gateway Transit enabled.
 
-### Phase 1: Direct NVA Routing (Initial Test)
-* **Logic**: Spoke VNet UDR pointed directly to the Private/Trust NIC of the Palo Alto (`172.18.2.4`).
-* **Outcome**: Successful connectivity, but no high availability. If the NVA is rebooted, the path is severed.
+### 1. Hub VNet (`fwvnet`) | 172.18.0.0/16
+Dedicated subnets for Management, Public (Untrust), Private (Trust), and VPN traffic planes ensure strict isolation of administrative and data traffic.
 
-### Phase 2: Internal Load Balancer Integration (Current PoC)
-* **Logic**: The UDR is updated to point to the ILB Frontend IP (`172.18.2.5`). 
-* **Mechanism**: The ILB uses **HA Ports** to forward all TCP/UDP traffic to the backend NVA pool.
-* **Benefit**: Decouples the routing from the specific VM instance, allowing for NVA maintenance without network downtime.
-
-
+### 2. Spoke VNet (`nf_vm_vnet`) | 172.20.0.0/16
+Designed for workload scalability, currently hosting the `nf-vm1` Ubuntu instance.
 
 ---
 
-## Technical Challenges & Validations
+## II. Security & Traffic Engineering
+### Centralized Inspection (NVA)
+A Palo Alto VM-Series firewall provides Deep Packet Inspection (DPI). The NVA is integrated with a **Standard Internal Load Balancer (ILB)** at `172.18.2.5` to provide a resilient next-hop for the network fabric.
 
-### 1. Resolving the "None" Health State
-During initial deployment, the ILB may show a Health Probe status of **None** or **Unknown**. This state prevents any traffic from being forwarded to the NVA.
+### High-Level Design (HLD)
+The architectural layout and component interaction are documented in:
+`Solutions_Architecture/PoC and Validation/Azure Network Infrastructure Briefing: Palo Alto Firewall Deployment/Introducing a Internal Load Balancer/HLD.png`
 
-* **Discovery**: Analysis of flow logs indicated the NVA was receiving the probe but the response was failing.
-* **Root Cause**: Asymmetric routing of the Azure "Wire IP" (`168.63.129.16`). The NVA was attempting to respond to the probe via the Untrust/Egress interface.
-* **The Fix**: Implemented a `/32` static route for `168.63.129.16` pointing back to the Trust Subnet Gateway.
+[Image of an Azure hub-and-spoke virtual network architecture featuring a centralized firewall and VPN gateway]
 
-### 2. High Availability Ports (HA Ports)
-To support the Palo Alto's role as a transit gateway, the ILB must handle traffic across all ports.
-* **Validation**: The ARM template explicitly defines a load balancing rule with `protocol: "All"`, `frontendPort: 0`, and `backendPort: 0`.
-* **Verification**: Testing with `curl -I http://www.google.com` confirmed that traffic is successfully balanced and logged by the NVA once the health probe transitioned to **Healthy**.
+### Routing Logic
+Custom Route Tables (UDRs) are applied to the Spoke and Gateway subnets to enforce "Force Tunneling" through the security stack.
 
-
-
----
-
-## Deployment Artifacts
-
-* **ARM Template**: [template.json](./template.json) - Contains the full Hub-and-Spoke definition, including the ILB, NVA, and Route Tables.
-* **Health Probe Configuration**: 
-    * **Protocol**: TCP
-    * **Port**: 443
-    * **NVA Requirement**: An Interface Management Profile must be applied to the Trust interface to permit the Azure Wire IP.
+| Route Table | Target Subnet | Traffic Scope | Next Hop |
+| :--- | :--- | :--- | :--- |
+| **nf-rt-vnets** | Spoke VMs | Internet & On-Prem | 172.18.2.5 (ILB) |
+| **nf-vpn-gw-rt** | GatewaySubnet | Inter-VNet & External | 172.18.2.5 (ILB) |
 
 ---
 
-## Key Integration Pillar: The Unified Security Fabric
-This PoC is a prerequisite for the **ClearPass Intune Extension** and **NDES SCEP** migrations. By securing the internal routing path via an ILB, we ensure that critical identity and certificate traffic remains resilient during firewall updates or failover events.
+## III. Hybrid Connectivity
+A Site-to-Site (S2S) VPN tunnel connects the environment to the on-premises footprint (`10.0.0.0/8`).
+* **Gateway SKU:** `VpnGw1AZ` (Zone-Redundant).
+* **Connection:** IKEv2 IPsec tunnel.
 
-[Return to Solutions Architecture README](../../../README.md)
+---
+
+## IV. Availability & Metadata
+* **Resilience:** Availability Sets for the NVA and Zone-Redundant SKUs for the VPN Gateway and Public IPs.
+* **Creator:** Nick Fennell
+* **Creation Date:** 01/25/2026
