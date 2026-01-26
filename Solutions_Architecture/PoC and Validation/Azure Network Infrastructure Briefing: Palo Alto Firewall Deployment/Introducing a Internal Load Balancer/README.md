@@ -1,49 +1,91 @@
-# Azure Network Architecture: Secure Hub-and-Spoke with Palo Alto NVA
+# Azure Hub-and-Spoke Network Infrastructure Briefing
 
 ## Executive Summary
-This architecture defines a high-availability **Hub-and-Spoke** topology in **West Europe**. It centralizes security via a **Palo Alto Networks NVA**, providing a single point of inspection for all ingress, egress, and east-west traffic.
+This document outlines the architecture of a sophisticated Hub-and-Spoke network topology deployed in the Azure **westeurope** region. The central element of this infrastructure is a **Palo Alto VM-Series firewall**, configured as a Network Virtual Appliance (NVA), which serves as the primary point for traffic inspection and security policy enforcement.
+
+All network traffic—including traffic between spokes (east-west), traffic to and from the internet (north-south), and traffic to a defined on-premises location via a Site-to-Site VPN (hybrid)—is systematically forced through this central firewall. This is achieved using a combination of VNet peering and Azure User-Defined Routes (UDRs) that direct all traffic to an internal load balancer fronting the Palo Alto appliance.
 
 ---
 
-## I. Network Infrastructure
-The deployment utilizes a Hub VNet for shared services and a Spoke VNet for application workloads, integrated via VNet Peering with Gateway Transit enabled.
+## Core Network Architecture
+The foundation of the deployment is a classic Hub-and-Spoke model, providing network segmentation, centralized control, and scalability.
 
-### 1. Hub VNet (`fwvnet`) | 172.18.0.0/16
-Dedicated subnets for Management, Public (Untrust), Private (Trust), and VPN traffic planes ensure strict isolation of administrative and data traffic.
+### Hub Virtual Network (`fwvnet`)
+The hub VNet acts as the central point of connectivity and hosts shared network services.
+* **Address Space:** `172.18.0.0/16`
+* **Subnet Configuration:**
 
-### 2. Spoke VNet (`nf_vm_vnet`) | 172.20.0.0/16
-Designed for workload scalability, currently hosting the `nf-vm1` Ubuntu instance.
+| Subnet Name | Address Prefix | Purpose |
+| :--- | :--- | :--- |
+| **Mgmt** | `172.18.0.0/24` | Firewall management traffic. |
+| **Public** | `172.18.1.0/24` | Untrusted, internet-facing traffic (Untrust). |
+| **Private** | `172.18.2.0/24` | Trusted, internal network traffic (Trust). |
+| **VPN** | `172.18.3.0/24` | Traffic related to the VPN interface of the NVA. |
+| **GatewaySubnet** | `172.18.4.0/27` | Dedicated subnet for the VPN Gateway. |
 
----
-
-## II. Security & Traffic Engineering
-### Centralized Inspection (NVA)
-A Palo Alto VM-Series firewall provides Deep Packet Inspection (DPI). The NVA is integrated with a **Standard Internal Load Balancer (ILB)** at `172.18.2.5` to provide a resilient next-hop for the network fabric.
-
-### High-Level Design (HLD)
-The architectural layout and component interaction are documented in:
-`Solutions_Architecture/PoC and Validation/Azure Network Infrastructure Briefing: Palo Alto Firewall Deployment/Introducing a Internal Load Balancer/HLD.png`
-
-[Image of an Azure hub-and-spoke virtual network architecture featuring a centralized firewall and VPN gateway]
-
-### Routing Logic
-Custom Route Tables (UDRs) are applied to the Spoke and Gateway subnets to enforce "Force Tunneling" through the security stack.
-
-| Route Table | Target Subnet | Traffic Scope | Next Hop |
-| :--- | :--- | :--- | :--- |
-| **nf-rt-vnets** | Spoke VMs | Internet & On-Prem | 172.18.2.5 (ILB) |
-| **nf-vpn-gw-rt** | GatewaySubnet | Inter-VNet & External | 172.18.2.5 (ILB) |
+### Spoke Virtual Network (`nf_vm_vnet`)
+Designed to host isolated workloads, with all traffic routed through the central hub.
+* **Address Space:** `172.20.0.0/16`
+* **Subnet (`VMs`):** `172.20.0.0/24`
 
 ---
 
-## III. Hybrid Connectivity
-A Site-to-Site (S2S) VPN tunnel connects the environment to the on-premises footprint (`10.0.0.0/8`).
-* **Gateway SKU:** `VpnGw1AZ` (Zone-Redundant).
-* **Connection:** IKEv2 IPsec tunnel.
+## Central Firewall (Palo Alto VM-Series)
+The core of the network's security is the `nfpalovm` virtual machine (Version 11.2.5). 
+
+
+
+### Interface Configuration
+The firewall utilizes four NICs with **IP Forwarding enabled**.
+
+| NIC Name | Subnet | Private IP | Public IP | Purpose |
+| :--- | :--- | :--- | :--- | :--- |
+| **eth0** | Mgmt | `172.18.0.4` | `4.180.160.82` | Management |
+| **eth1** | Public | `172.18.1.4` | `20.61.64.206` | Untrust/Internet |
+| **eth2** | Private | `172.18.2.4` | None | Trust (connects to ILB) |
+| **eth3** | VPN | `172.18.3.4` | None | VPN-related traffic |
 
 ---
 
-## IV. Availability & Metadata
-* **Resilience:** Availability Sets for the NVA and Zone-Redundant SKUs for the VPN Gateway and Public IPs.
-* **Creator:** Nick Fennell
-* **Creation Date:** 01/25/2026
+## Traffic Management & Routing Logic
+
+### GatewaySubnet "Split-Routing"
+A platform restriction prevents a standard `0.0.0.0/0` (Default Route) from being pointed to a Virtual Appliance on the **GatewaySubnet**. To bypass this and ensure 100% "Inbound Forced Tunneling," we implement **Longest Prefix Match (LPM)** logic.
+
+![Routing Logic](Enterprise-Architecture-Portfolio/Solutions_Architecture/PoC%20and%20Validation/Azure%20Network%20Infrastructure%20Briefing:%20Palo%20Alto%20Firewall%20Deployment/Introducing%20a%20Internal%20Load%20Balancer/routing-logic.png)
+
+* **The Logic:** We define two routes (`0.0.0.0/1` and `128.0.0.0/1`). Because a `/1` prefix is more specific than the system's `/0` default, the Gateway is forced to hand packets to our **Internal Load Balancer (`172.18.2.5`)**.
+
+
+
+### Spoke VNet Routing (`nf_rt_vnets`)
+* **Associated Subnet:** `VMs` in `nf_vm_vnet`.
+* **Route:** `0.0.0.0/0` → Next Hop: **Virtual Appliance** (`172.18.2.5`).
+* **Result:** All internet-bound and cross-VNet traffic is inspected by the NVA.
+
+---
+
+## Hybrid Connectivity (Site-to-Site VPN)
+A VPN connection bridges the Azure network with the on-premises location.
+* **VPN Gateway:** `nf_vpngw` (SKU: `VpnGw1AZ`, Public IP: `132.220.97.108`)
+* **Local Network Gateway:** `37.228.234.241`
+* **On-Prem Address Space:** `192.168.0.0/24`, `10.0.0.0/8`
+* **Protocol:** IPsec IKEv2
+
+
+
+---
+
+## Security Posture
+The security implementation centralizes policy enforcement on the Palo Alto NVA. 
+
+* **Network Security Groups (NSGs):** Native Azure NSGs are configured with permissive "Allow-All" rules. This ensures the NVA software—not the Azure fabric—is the primary point of control. 
+* **Trust NSG (`nf_nsg_priv`):** Includes a specific outbound rule for `172.20.0.0/24` to `10.0.11.0/24`.
+* **Filtering:** Comprehensive L7 inspection, URL filtering, and SNAT are performed within the Palo Alto VM-Series.
+
+---
+
+### Deployment Metadata
+* **Region:** West Europe
+* **VM Size:** `Standard_D8_v4`
+* **Availability Set:** `nf_av_set`
