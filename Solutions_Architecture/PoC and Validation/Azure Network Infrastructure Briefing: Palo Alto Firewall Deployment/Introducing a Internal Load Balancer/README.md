@@ -33,8 +33,6 @@ Designed to host isolated workloads, with all traffic routed through the central
 ## Central Firewall (Palo Alto VM-Series)
 The core of the network's security is the `nfpalovm` virtual machine (Version 11.2.5). 
 
-
-
 ### Interface Configuration
 The firewall utilizes four NICs with **IP Forwarding enabled**.
 
@@ -52,7 +50,7 @@ The firewall utilizes four NICs with **IP Forwarding enabled**.
 ### GatewaySubnet "Split-Routing"
 A platform restriction prevents a standard `0.0.0.0/0` (Default Route) from being pointed to a Virtual Appliance on the **GatewaySubnet**. To bypass this and ensure 100% "Inbound Forced Tunneling," we implement **Longest Prefix Match (LPM)** logic.
 
-![Routing Logic](Enterprise-Architecture-Portfolio/Solutions_Architecture/PoC%20and%20Validation/Azure%20Network%20Infrastructure%20Briefing:%20Palo%20Alto%20Firewall%20Deployment/Introducing%20a%20Internal%20Load%20Balancer/routing-logic.png)
+![Routing Logic](Solutions_Architecture/PoC%20and%20Validation/Azure%20Network%20Infrastructure%20Briefing:%20Palo%20Alto%20Firewall%20Deployment/routing-logic.png)
 
 * **The Logic:** We define two routes (`0.0.0.0/1` and `128.0.0.0/1`). Because a `/1` prefix is more specific than the system's `/0` default, the Gateway is forced to hand packets to our **Internal Load Balancer (`172.18.2.5`)**.
 
