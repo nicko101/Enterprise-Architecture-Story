@@ -13,7 +13,7 @@ This project documents the deployment of a High-Availability (HA) Palo Alto VM-S
 ## 🏗️ Architectural Overview
 The infrastructure is deployed in the `westeurope` region within a central `fwVNET` (172.18.0.0/16). 
 
-[Image of Azure Load Balancer sandwich with Palo Alto NVAs and S2S VPN]
+
 
 ### Core Components
 * **Firewall Pair:** `nfpaloaltovm` (Standard_B4ls_v2) and `nfpaloaltovm2` (Standard_D8_v4) running PAN-OS 11.2.5.
@@ -30,4 +30,48 @@ The infrastructure is deployed in the `westeurope` region within a central `fwVN
 | Subnet | Address Prefix | Associated NSG | Purpose |
 | :--- | :--- | :--- | :--- |
 | **Mgmt** | 172.18.0.0/24 | DefaultNSG | Management access (eth0). |
-| **Public** | 172.18.1.0/24 | Allow-
+| **Public** | 172.18.1.0/24 | Allow-All | Untrusted traffic / VPN Termination (eth1). |
+| **Private** | 172.18.2.0/24 | Allow-All | Trusted traffic / Internal VNet access (eth2). |
+| **Gateway**| 172.18.3.0/27 | None | Dedicated for the Virtual Network Gateway. |
+
+### The "Symmetric Return" Solution (Critical)
+In a dual-NVA setup, traffic often enters through one firewall while the reply is hashed to the other by the Azure Load Balancer (Asymmetric Routing), causing session drops.
+
+**The Fix:**
+We implemented a **Source NAT (SNAT)** policy on the Trust interface. This translates the source IP of inbound VPN traffic to the NVA's local Trust IP.
+* **Result:** The destination VM replies directly to the NVA that initiated the session, bypassing the Load Balancer's hashing and ensuring symmetric traffic flow.
+
+---
+
+## 🔧 Configuration Highlights
+
+### External Load Balancer (`nf-elb`)
+| Rule | Port/Protocol | Persistence | Floating IP |
+| :--- | :--- | :--- | :--- |
+| **VPN IKE** | 500/UDP | **Client IP** | Disabled |
+| **VPN NAT-T** | 4500/UDP | **Client IP** | Disabled |
+| **Web/SSL** | 443/TCP | Default | Disabled |
+
+### Security Policy Philosophy
+Subnet-level **Network Security Groups (NSGs)** are configured as "Allow-All" for the Data Plane. This offloads all security enforcement, threat prevention, and logging to the Palo Alto appliances.
+
+---
+
+## 🛠️ Troubleshooting Guide
+
+| Symptom | Probable Cause | Investigation Command |
+| :--- | :--- | :--- |
+| **VPN Tunnel Up, No Ping** | Zone Mismatch | `show session all filter destination <IP>` |
+| **Aged-out Sessions** | Asymmetric Routing | Check if SNAT policy is active on Trust zone. |
+| **Packet Loss over VPN** | Proxy ID Mismatch | `show vpn flow name <tunnel-name>` |
+| **Internet Fails** | Incorrect Next-VR | `test routing fib-lookup virtual-router trust-vr ip 8.8.8.8` |
+
+---
+
+## 🚀 Deployment Metadata
+* **Region:** West Europe
+* **Software:** Palo Alto VM-Series Flex (BYOL)
+* **Image Version:** 11.2.5
+* **Admin:** azureuser1
+
+---
