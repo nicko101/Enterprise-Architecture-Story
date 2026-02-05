@@ -1,0 +1,1 @@
+Although the traffic originates on-premises, once it is SNATed on the NVA it becomes Azure-sourced traffic, so the VM subnet route table governs the onward and return routing.
