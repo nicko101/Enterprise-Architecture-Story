@@ -1,127 +1,90 @@
-# Azure Network Infrastructure: Palo Alto NVA & S2S VPN (Reference Architecture)
+# Azure Hybrid Network Architecture – Palo Alto NVA  
+## Migration, Inspection, and Validated Split-Transit Design
 
-![Architecture Diagram](Solutions_Architecture/PoC%20and%20Validation/Azure%20Network%20Infrastructure%20Briefing:%20Palo%20Alto%20Firewall%20Deployment/vpngw-nva-vpn.png)
+## Overview
+This project documents the architecture, delivery, and validation of a hybrid on-premises to Azure network migration using Palo Alto Networks NVAs as the primary inspection and enforcement layer.
 
-## Executive Summary
-This repository documents a **reference implementation** of a secure **Hub-and-Spoke** network architecture in **Microsoft Azure**, designed to centralize traffic inspection using a **Palo Alto Networks VM-Series NVA**.
+The work originated from a real production requirement to migrate an on-premises site away from a legacy Azure VPN Gateway–centric model and toward a more scalable, inspection-driven architecture. The engagement captures both the **in-scope delivery under time constraints** and a **validated proof of concept (PoC)** addressing longer-term architectural limitations identified during implementation.
 
-The focus of this design is to demonstrate:
-- Centralized security enforcement
-- Controlled hybrid connectivity via Site-to-Site VPN
-- Deterministic traffic steering using Azure routing constructs
-- High-availability patterns for NVAs
-
-> **Note:** Exact IP addressing, resource names, and environment-specific values are intentionally abstracted.
+This repository is structured to reflect a Professional Services–style engagement, including scope definition, design intent, delivery outcomes, constraints, risks, and dependency boundaries.
 
 ---
 
-## 1. Architectural Overview
-
-### 1.1 Hub-and-Spoke Topology
-The deployment follows a classic hub-and-spoke model:
-
-- **Hub VNet**
-  - Hosts shared infrastructure and security services
-  - Contains the Palo Alto NVA and Azure VPN Gateway
-- **Spoke VNet(s)**
-  - Host application workloads
-  - All ingress, egress, and inter-VNet traffic is forced through the Hub
-
-This model enables centralized policy enforcement and simplified security operations.
+## Project Objectives
+- Migrate a new on-premises site to Palo Alto NVA–based connectivity
+- Enable secure internet breakout via Azure
+- Ensure inspection of on-premises ↔ Azure traffic for the new site
+- Maintain operational stability under strict delivery timelines
+- Identify and validate a scalable long-term routing architecture
 
 ---
 
-### 1.2 Network Segmentation (Conceptual)
-The Hub network is logically segmented to separate traffic planes.
+## Delivered Outcome (In Scope)
+The production delivery achieved:
+- Direct on-premises to Palo Alto NVA VPN connectivity for the new site
+- Centralised inspection of on-premises ↔ Azure traffic
+- Internet breakout via the NVA without reliance on GatewaySubnet routing changes
+- Minimal impact to legacy site connectivity
 
-| Subnet (Conceptual) | Purpose |
-|---------------------|---------|
-| Management | Out-of-band firewall management |
-| Trust | Internal traffic inspection and east-west flows |
-| Untrust | Internet egress and ingress |
-| VPN | Transit for Site-to-Site VPN traffic |
-| GatewaySubnet | Azure VPN Gateway (reserved) |
+This delivery met all agreed success criteria within the defined scope.
 
 ---
 
-## 2. Traffic Engineering & Security Enforcement
+## Architectural Findings
+During implementation, several platform and design constraints were identified:
+- Standalone NVA deployments behind an external load balancer support only a single active VPN tunnel
+- Load balancer health probes introduce HA and failover limitations
+- VPN Gateway–sourced traffic bypasses NVA inspection by default unless explicitly routed
 
-### 2.1 Centralized Inspection Pattern
-All traffic flows—whether:
-- Internet-bound
-- On-premises-bound
-- Inter-VNet
-
-—are explicitly routed through the Palo Alto NVA.
-
-Azure **User-Defined Routes (UDRs)** are used to prevent bypass and ensure deterministic forwarding.
+These findings highlighted scalability and consistency risks in tunnel-anchored inspection models.
 
 ---
 
-### 2.2 Routing Strategy (Abstracted)
+## Validated PoC – Split-Transit Routing Model
+In response, a **dependency-aware split-transit routing model** was designed and validated via PoC.
 
-| Traffic Source | Destination | Routing Intent |
-|----------------|------------|----------------|
-| Spoke workloads | Internet | Forced via NVA |
-| Spoke workloads | On-premises | Forced via NVA |
-| VPN Gateway | Spoke prefixes | Forwarded to NVA |
-| NVA | Internet | Egress via untrust |
+Key characteristics:
+- VPN termination anchored at the Azure VPN Gateway
+- Gateway-level routing used to steer traffic to the Palo Alto NVA
+- Removal of NVA VPN tunnels for Azure ↔ on-premises traffic
+- Retention of NVA VPN tunnels exclusively for on-premises internet breakout
+- Improved HA characteristics and routing symmetry
 
-Default routes (`0.0.0.0/0`) are applied only where supported by Azure platform constraints.
-
----
-
-## 3. Hybrid Connectivity (Site-to-Site VPN)
-
-Hybrid connectivity is provided using an **Azure VPN Gateway** and a route-based IPsec tunnel.
-
-Key design principles:
-- The VPN Gateway terminates IPsec
-- On-premises traffic is forwarded to the NVA for inspection
-- Return traffic is symmetrically routed back through the VPN Gateway
-
-> Full on-premises forced tunneling (default route over S2S) requires BGP-based steering (e.g., Azure Route Server) and is outside the scope of this reference design.
+⚠️ **This model has been validated via PoC only and has not been implemented in production.**
 
 ---
 
-## 4. Firewall Configuration (Conceptual)
-
-The Palo Alto VM-Series firewall is configured with:
-
-- **Zones**
-  - Untrust (internet-facing)
-  - Trust (internal workloads)
-  - VPN (S2S tunnel termination)
-- **Security Policies**
-  - Explicit allow rules for inspected flows
-- **NAT**
-  - Source NAT for internet-bound traffic
-- **Routing**
-  - Static or dynamic routes toward Azure gateways and spokes
-
-All policies follow **least-privilege** principles.
+## Scope and Ownership
+- Azure-side architecture, routing design, and validation are documented here
+- On-premises VPN changes and additional tunnels fall outside current ownership
+- Any production rollout of the PoC architecture would require a formally scoped Professional Services engagement
 
 ---
 
-## 5. Validation & Observability
+## Repository Structure
+This project is organised as a structured engagement lifecycle:
 
-Traffic validation is performed using:
-- Palo Alto traffic logs
-- Session browser inspection
-- Azure routing diagnostics
-
-Successful validation confirms:
-- On-prem traffic arrives via the VPN tunnel
-- Traffic is inspected and NATed by the NVA
-- Return traffic is symmetric and stateful
+- **00 – Context and Scope**: Background and scope boundaries  
+- **01 – Original Design Intent**: Initial architecture assumptions  
+- **02 – In-Scope Delivery**: Production changes delivered  
+- **03 – Constraints and Pivot**: Design adjustments under pressure  
+- **04 – Constraints and Risks**: Identified architectural limitations  
+- **05 – Validated PoC – Split Transit**: Tested future-state design  
+- **06 – Dependencies and Ownership**: Responsibility boundaries  
+- **07 – Reference and Blueprints**: External reference material  
 
 ---
 
-## 6. Scope & Intent
+## Status
+- **Production Delivery**: Completed (in scope)
+- **Split-Transit Architecture**: Designed and validated via PoC
+- **Further Implementation**: Not undertaken
 
-This repository is intended as:
-- A **design reference**
-- A **learning and validation artefact**
-- A **portfolio demonstration** of Azure networking and security architecture
+---
 
-It is **not** intended to be a production deployment guide.
+## Audience
+This documentation is intended for:
+- Azure networking and cloud engineers
+- Professional Services consultants
+- Solution and network architects
+- Technical stakeholders reviewing hybrid cloud designs
