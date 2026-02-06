@@ -1,4 +1,4 @@
-# Azure Deployment: Palo Alto Networks NGFW (VM-Series)
+﻿# Azure Deployment: Palo Alto Networks NGFW (VM-Series)
 ## Forced-Tunnel Security Architecture with Centralized Traffic Inspection
 
 ## Executive Summary
@@ -6,11 +6,11 @@ This document provides a detailed architectural and engineering analysis of an A
 
 The deployment implements a **forced-tunnel security architecture**, where all outbound traffic originating from protected workloads is explicitly routed through the Palo Alto NGFW for inspection and policy enforcement. The firewall operates as the **centralized security control point**, inspecting both inbound and outbound traffic.
 
-A segmented Virtual Network (VNet) is deployed in the **West Europe** region with dedicated subnets for management, untrusted (public) traffic, and trusted (private) workloads. A custom route table applied to the Private subnet enforces forced tunneling by directing all internet-bound traffic (0.0.0.0/0) to the firewall’s trust interface.
+A segmented Virtual Network (VNet) is deployed in the **West Europe** region with dedicated subnets for management, untrusted (public) traffic, and trusted (private) workloads. A custom route table applied to the Private subnet enforces forced tunneling by directing all internet-bound traffic (0.0.0.0/0) to the firewallÔÇÖs trust interface.
 
-Inbound internet traffic is handled via a **Standard Azure Load Balancer**, which forwards traffic to the firewall’s untrusted interface using inbound NAT rules. Azure Network Security Groups (NSGs) are intentionally permissive, delegating all traffic filtering responsibility to the Palo Alto NGFW to avoid policy conflicts and ensure consistent Layer 7 enforcement.
+Inbound internet traffic is handled via a **Standard Azure Load Balancer**, which forwards traffic to the firewallÔÇÖs untrusted interface using inbound NAT rules. Azure Network Security Groups (NSGs) are intentionally permissive, delegating all traffic filtering responsibility to the Palo Alto NGFW to avoid policy conflicts and ensure consistent Layer 7 enforcement.
 
-This deployment is documented as an **engineering and architectural evaluation**, highlighting valid enterprise design patterns—such as forced tunneling and centralized inspection—alongside explicit risks, including the lack of high availability and permissive management access.
+This deployment is documented as an **engineering and architectural evaluation**, highlighting valid enterprise design patternsÔÇösuch as forced tunneling and centralized inspectionÔÇöalongside explicit risks, including the lack of high availability and permissive management access.
 ---
 
 ## Quick Navigation
@@ -174,7 +174,7 @@ Applied to:
 - Mgmt subnet
 
 Inbound rules:
-1. **DenyAnyCustomAnyInbound (Priority 100)** – *Action: Allow*
+1. **DenyAnyCustomAnyInbound (Priority 100)** ÔÇô *Action: Allow*
 2. Allow-Intra (Priority 101)
 3. Default-Deny (Priority 200)
 
