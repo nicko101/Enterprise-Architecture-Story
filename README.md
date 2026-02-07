@@ -31,4 +31,8 @@ This repository serves as the **Forensic Flight Recorder** for the Hybrid Cloud 
 
 ### 🕵️ Technical Diagnostics
 * **Azure LB**: Regional 'Standard' SKU (nf-elb) deployed in West Europe.
-* **Health Probes**: Port 443
+* **Health Probes**: Port 443 is monitored every 5 seconds to ensure backend availability.
+* **Traffic Rules**: Supports multi-protocol traffic including TCP (80, 443, 22) and UDP (500, 4500) with SourceIP load distribution.
+
+### ✅ Final Status: [ARCHITECTURAL VALIDATION COMPLETE](Packet-Life-Forensics/slide-summart.png)
+End-to-end architectural integrity is confirmed through the cross-correlation of identity logs, PBF enforcement, and packet-level captures.
