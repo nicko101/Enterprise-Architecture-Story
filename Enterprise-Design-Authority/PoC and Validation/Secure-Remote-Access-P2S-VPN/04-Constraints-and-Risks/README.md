@@ -1,3 +1,0 @@
-# 04-Constraints-and-Risks
-
-Drafting documentation for this phase...

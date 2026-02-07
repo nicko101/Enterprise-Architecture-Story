@@ -1,3 +1,0 @@
-# 07-Reference-and-Blueprints
-
-Drafting documentation for this phase...

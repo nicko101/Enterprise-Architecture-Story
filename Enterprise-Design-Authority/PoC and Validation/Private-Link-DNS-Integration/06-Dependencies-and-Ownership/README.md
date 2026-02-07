@@ -1,3 +1,0 @@
-# 06-Dependencies-and-Ownership
-
-Drafting documentation for this phase...

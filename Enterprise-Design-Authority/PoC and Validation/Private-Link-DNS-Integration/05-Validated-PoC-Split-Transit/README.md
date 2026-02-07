@@ -1,3 +1,0 @@
-# 05-Validated-PoC-Split-Transit
-
-Drafting documentation for this phase...

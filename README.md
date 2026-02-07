@@ -1,37 +1,23 @@
-# 📂 Packet Life: Forensic Data Plane Validation
+# ?? Packet Life: Forensic Timeline & Validation
 
-### 🏛️ Project Purpose
-This repository serves as the **Forensic Flight Recorder** for the Hybrid Cloud Architecture. While the Enterprise Portfolio defines the design intent, this repository contains the **Packet-Level Proof** that the data plane behaves according to the defined security and steering policies.
+### ??? Project Purpose
+This repository is the **forensic companion** to the Enterprise Portfolio. It documents the "Packet Life Walk"�the binary proof of the "Identity-to-Cloud" data plane, validating every state change a packet undergoes from the edge to the NVA.
 
-### 🗺️ The "Packet Life" Framework
-I validate the lifecycle of a packet through four distinct architectural "Checkpoints" to ensure end-to-end integrity:
+### ??? Forensic Timeline (The Walk)
 
-#### **1. Identity-Based Admission (The Edge)**
-* **Logic**: No traffic is permitted until **TEAP (Chained Authentication)** is successful.
-* **Validation**: ClearPass logs confirm both user `LAB02\nick` and machine `Win10` are authenticated.
+#### **Step 1: Identity Admission**
+* **Location**: \/Stage-1-Edge-Identity\
+* **Validation**: Implementation of **TEAP (EAP-TLS)** via Aruba ClearPass for chained Machine + User authentication.
 
-#### **2. Deterministic Provisioning (The L3 Boundary)**
-* **Logic**: The Palo Alto PA-VM assigns a specific identity-linked IP via DHCP.
-* **Validation**: Forensic matching of MAC `bc:24:11:fb:cb:c4` to IP `10.0.11.17`.
+#### **Step 2: L3 Mapping & Provisioning**
+* **Location**: \/Stage-2-IP-Allocation\
+* **Validation**: Forensic matching of MAC \c:24:11:fb:cb:c4\ to the **10.0.11.17** DHCP lease on the Palo Alto PA-VM.
 
-#### **3. Policy-Based Forwarding (The Steering)**
-* **Logic**: Standard routing is overridden to steer traffic into specific encrypted tunnels.
-    * **Internet Traffic**: Steered to `tunnel.200`.
-    * **Internal Azure VNet (172.17.x.x)**: Steered to `tunnel.99`.
-* **Validation**: Traffic logs confirm `8.8.8.8` egresses via `tunnel.200` as intended.
+#### **Step 3: Tunnel Steering (PBF)**
+* **Location**: \/Stage-3-Data-Plane-Steering\
+* **Validation**: Proves traffic for \8.8.8.8\ was explicitly steered into **tunnel.200** for encrypted egress.
 
-#### **4. Cloud Ingress & Forensic Analysis (The Arrival)**
-* **Logic**: Traffic arrives at the **Azure NVA** after traversing the **Standard Load Balancer (nf-elb)**.
-* **Validation**: Wireshark analysis (`rx(7).pcap`) confirms decapsulated packet arrival and DNS resolution continuity.
-
----
-
-### 🏛️ Key Forensic Artifacts
-* **`rx(7).pcap`**: Proof of cloud-side arrival for internet-bound traffic.
-* **`Auth-Success.png`**: ClearPass evidence of the TEAP handshake.
-* **`PBF-Logic.log`**: Proof of steering via Policy-Based Forwarding.
-
-
-
-### 🚀 Senior Architect Insight
-The absence of certain traffic in specific captures (e.g., missing `172.17.x.x` traffic in an internet-focused PCAP) is used to verify **Path Isolation**. This confirms that PBF rules are successfully separating sensitive internal traffic from general internet traffic at the encryption boundary, ensuring no "leaks" occur between the cloud spokes.
+#### **Step 4: Cloud Ingress Forensics**
+* **Location**: \/Stage-4-Cloud-Ingress\
+* **Artifact**: \save.pcap\.
+* **Validation**: Raw packet analysis proving arrival at the Azure NVA after decapsulation.

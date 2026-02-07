@@ -1,5 +1,0 @@
-<uid-message><version>1.0</version><type>update</type><payload><login><entry name="%{user}" ip="%{ip}"/></login></payload></uid-message>
-
-
-Context serev
-https://{server_ip}/api/?type=keygen&user={username}&password={password}
