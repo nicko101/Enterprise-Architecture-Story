@@ -1,23 +1,42 @@
-﻿# 📂 Packet Life: Forensic Timeline & Validation
+Packet Life: Forensic Timeline & Validation
+🏛️ Executive Summary
+This repository provides a technical synthesis of a hybrid network environment utilizing Azure Resource Manager (ARM) templates and Palo Alto Virtual Machine (PA-VM) security appliances. It documents the 'Packet Life Walk'—the binary proof of identity-based access, deterministic routing, and cloud-ingress integrity.
 
-### 🏛️ Project Purpose
-This repository is the **forensic companion** to the Enterprise Portfolio. It documents the 'Packet Life Walk'—the binary proof of the 'Identity-to-Cloud' data plane, validating every state change a packet undergoes from the edge to the NVA.
+🗺️ The Validated Packet Journey
+1. Identity Admission & Edge Security
+Evidence: Digital Identity Card
 
-### 🗺️ Forensic Timeline (The Walk)
+Logic: Implementation of TEAP (EAP-TLS, EAP-MSCHAPv2) via Aruba ClearPass.
 
-#### **Step 1: Identity Admission**
-* **Location**: /Stage-1-Edge-Identity
-* **Validation**: Implementation of **TEAP (EAP-TLS)** via Aruba ClearPass for chained Machine + User authentication.
+Outcome: Verified session for LAB02\nick on device Win10 (bc:24:11:fb:cb:c4), authorizing network access on Feb 07, 2026.
 
-#### **Step 2: L3 Mapping & Provisioning**
-* **Location**: /Stage-2-IP-Allocation
-* **Validation**: Forensic matching of MAC \c:24:11:fb:cb:c4\ to the **10.0.11.17** DHCP lease on the Palo Alto PA-VM.
+2. L3 Mapping & Deterministic Provisioning
+Evidence: DHCP Assignment
 
-#### **Step 3: Tunnel Steering (PBF)**
-* **Location**: /Stage-3-Data-Plane-Steering
-* **Validation**: Proves traffic for \8.8.8.8\ was explicitly steered into **tunnel.200** for encrypted egress.
+Logic: The PA-VM DHCP server binds the authenticated identity to a specific IP.
 
-#### **Step 4: Cloud Ingress Forensics**
-* **Location**: /Stage-4-Cloud-Ingress
-* **Artifact**: \save.pcap\.
-* **Validation**: Raw packet analysis proving arrival at the Azure NVA after decapsulation.
+Outcome: Host Win10 committed to IPv4 address 10.0.11.17 from the 10.0.11.0/24 pool.
+
+3. Tunnel Steering & Policy Enforcement
+Evidence: PBF Routing Logic
+
+Logic: Policy-Based Forwarding (PBF) explicitly routes traffic from the local LAN through 'tunnel.200' for egress.
+
+Outcome: Traffic is correctly steered via PBF rule 'Simulate-Default-Route' to tunnel.200.
+
+4. Cloud Ingress & Forensic Analysis
+Evidence: Packet Capture Analysis
+
+Logic: Traffic traverses an Azure Standard Load Balancer (nf-elb) to the PA-VM backend pool.
+
+Diagnostic Insight: PCAP analysis confirms bidirectional DNS flow and active TCP management (RST/ACK), proving end-to-end path validity.
+
+🕵️ Technical Diagnostics
+Azure LB: Regional 'Standard' SKU (nf-elb) deployed in West Europe.
+
+Health Probes: Port 443 is monitored every 5 seconds to ensure backend availability.
+
+Traffic Rules: Supports multi-protocol traffic including TCP (80, 443, 22) and UDP (500, 4500) with SourceIP load distribution.
+
+✅ Final Status: VALIDATED
+End-to-end architectural integrity is confirmed through the cross-correlation of identity logs, PBF enforcement, and packet-level captures.
