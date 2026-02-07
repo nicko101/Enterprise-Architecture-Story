@@ -1,9 +1,9 @@
-# ?? Packet Life: Forensic Timeline & Validation
+﻿# 📂 Packet Life: Forensic Timeline & Validation
 
-### ??? Project Purpose
-This repository is the **forensic companion** to the Enterprise Portfolio. It documents the 'Packet Life Walk'�the binary proof of the 'Identity-to-Cloud' data plane, validating every state change a packet undergoes from the edge to the NVA.
+### 🏛️ Project Purpose
+This repository is the **forensic companion** to the Enterprise Portfolio. It documents the 'Packet Life Walk'—the binary proof of the 'Identity-to-Cloud' data plane, validating every state change a packet undergoes from the edge to the NVA.
 
-### ??? Forensic Timeline (The Walk)
+### 🗺️ Forensic Timeline (The Walk)
 
 #### **Step 1: Identity Admission**
 * **Location**: /Stage-1-Edge-Identity
@@ -19,5 +19,5 @@ This repository is the **forensic companion** to the Enterprise Portfolio. It do
 
 #### **Step 4: Cloud Ingress Forensics**
 * **Location**: /Stage-4-Cloud-Ingress
-* **Artifact**: \save.pcap\
+* **Artifact**: \save.pcap\.
 * **Validation**: Raw packet analysis proving arrival at the Azure NVA after decapsulation.
